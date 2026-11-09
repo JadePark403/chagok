@@ -31,7 +31,12 @@
       padding: 28px 18px 120px;
     }
     h1 { font-size: 1.5rem; margin: 0 0 4px; font-weight: 700; }
-    .sub { color: var(--soft); margin: 0 0 24px; font-size: 0.95rem; }
+    .sub { color: var(--soft); margin: 0 0 12px; font-size: 0.95rem; }
+    .vent-link {
+      display: block; margin: 0 0 22px; padding: 14px 18px;
+      background: var(--accent-soft); color: var(--text);
+      border-radius: 16px; text-decoration: none; font-size: 0.95rem;
+    }
 
     /* 항목 목록 */
     .items { list-style: none; padding: 0; margin: 0 0 16px; display: grid; gap: 10px; }
@@ -145,6 +150,7 @@
   <main>
     <h1>오늘 해낸 일</h1>
     <p class="sub">해낸 일을 탭하면 기록돼요. 작은 것도 충분해요.</p>
+    <a class="vent-link" href="vent.html">털어놓고 싶을 땐 여기로 →</a>
 
     <ul class="items" id="items"></ul>
 
