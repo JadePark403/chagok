@@ -1,0 +1,387 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>오늘 해낸 일</title>
+  <style>
+    :root {
+      --bg: #faf6f0;
+      --card: #ffffff;
+      --text: #4a4038;
+      --soft: #8c7f73;
+      --accent: #e8a87c;      /* 따뜻한 살구색 */
+      --accent-soft: #fbe8da;
+      --done: #9bbf9f;        /* 부드러운 초록 */
+      --done-soft: #e6f1e7;
+      --line: #eee5da;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Noto Sans KR", sans-serif;
+      line-height: 1.5;
+      -webkit-tap-highlight-color: transparent;
+    }
+    main {
+      max-width: 480px;
+      margin: 0 auto;
+      padding: 28px 18px 120px;
+    }
+    h1 { font-size: 1.5rem; margin: 0 0 4px; font-weight: 700; }
+    .sub { color: var(--soft); margin: 0 0 24px; font-size: 0.95rem; }
+
+    /* 항목 목록 */
+    .items { list-style: none; padding: 0; margin: 0 0 16px; display: grid; gap: 10px; }
+    .item {
+      display: flex; align-items: center; gap: 12px;
+      width: 100%;
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 16px 18px;
+      font: inherit; color: inherit; text-align: left;
+      cursor: pointer;
+      transition: transform .15s ease, background .3s ease;
+    }
+    .item:active { transform: scale(0.98); }
+    .item .name { flex: 1; font-size: 1.05rem; }
+    .item .count { color: var(--soft); font-size: 0.85rem; }
+    .item.did { background: var(--done-soft); border-color: #d3e6d5; }
+    .item.did .count { color: #5f8f64; }
+    .item.pop { animation: pop .45s ease; }
+    @keyframes pop {
+      0% { transform: scale(1); }
+      40% { transform: scale(1.03); }
+      100% { transform: scale(1); }
+    }
+    .del {
+      border: none; background: none; color: var(--soft);
+      font-size: 0.85rem; padding: 4px 8px; cursor: pointer;
+      display: none;
+    }
+    .editing .del { display: inline-block; }
+    .editing .item { cursor: default; }
+
+    .empty {
+      color: var(--soft); text-align: center;
+      padding: 24px 12px; font-size: 0.95rem;
+    }
+
+    /* 항목 추가 */
+    .add { display: flex; gap: 8px; margin-bottom: 8px; }
+    .add input {
+      flex: 1; font: inherit; color: inherit;
+      padding: 14px 16px;
+      border: 1px solid var(--line); border-radius: 14px;
+      background: var(--card); outline: none;
+    }
+    .add input:focus { border-color: var(--accent); }
+    .add button {
+      font: inherit; border: none; border-radius: 14px;
+      padding: 0 18px; background: var(--accent); color: #fff;
+      cursor: pointer;
+    }
+    .tools { text-align: right; }
+    .link {
+      border: none; background: none; color: var(--soft);
+      font: inherit; font-size: 0.85rem; cursor: pointer; padding: 6px 4px;
+      text-decoration: underline; text-underline-offset: 3px;
+    }
+
+    /* 오늘 기록 */
+    h2 { font-size: 1.05rem; margin: 32px 0 10px; }
+    .log { list-style: none; padding: 0; margin: 0; }
+    .log li {
+      display: flex; gap: 10px; padding: 10px 2px;
+      border-bottom: 1px solid var(--line); font-size: 0.95rem;
+    }
+    .log time { color: var(--soft); min-width: 3.5em; }
+
+    /* 아래쪽 안내 (되돌리기) */
+    .toast {
+      position: fixed; left: 50%; bottom: 24px;
+      transform: translate(-50%, 20px);
+      background: #5a4e45; color: #fff;
+      padding: 12px 16px; border-radius: 14px;
+      display: flex; gap: 14px; align-items: center;
+      opacity: 0; pointer-events: none;
+      transition: opacity .25s ease, transform .25s ease;
+      max-width: calc(100% - 32px);
+    }
+    .toast.show { opacity: 1; transform: translate(-50%, 0); pointer-events: auto; }
+    .toast button {
+      border: none; background: none; color: var(--accent-soft);
+      font: inherit; text-decoration: underline; cursor: pointer; padding: 0;
+      white-space: nowrap;
+    }
+    .toast { flex-wrap: wrap; width: 440px; }
+    .toast #toastText { flex: 1; min-width: 0; }
+    .memo-form { display: none; width: 100%; gap: 8px; }
+    .toast.memo .memo-form { display: flex; }
+    .toast.memo .toast-actions { display: none; }
+    .toast-actions { display: flex; gap: 14px; }
+    .memo-form input {
+      flex: 1; min-width: 0; font: inherit; color: var(--text);
+      padding: 10px 12px; border: none; border-radius: 10px; outline: none;
+    }
+    .memo-form button { text-decoration: none; background: var(--accent); color: #fff; border-radius: 10px; padding: 0 14px; }
+    .log .memo { display: block; color: var(--soft); font-size: 0.88rem; }
+    .log .memo.hint { color: #c4b8ac; font-size: 0.8rem; }
+    .log .entry { flex: 1; min-width: 0; }
+    .log li.tappable { cursor: pointer; border-radius: 8px; }
+    .log li.tappable:active { background: var(--accent-soft); }
+    .memo-edit {
+      display: block; width: 100%; margin-top: 6px;
+      font: inherit; font-size: 0.9rem; color: inherit;
+      padding: 10px 12px; border: 1px solid var(--accent);
+      border-radius: 10px; background: var(--card); outline: none;
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>오늘 해낸 일</h1>
+    <p class="sub">해낸 일을 탭하면 기록돼요. 작은 것도 충분해요.</p>
+
+    <ul class="items" id="items"></ul>
+
+    <form class="add" id="addForm" autocomplete="off">
+      <input id="addInput" maxlength="40" placeholder="예: 물 한 잔 마시기, 창문 열기" />
+      <button type="submit">추가</button>
+    </form>
+    <div class="tools">
+      <button class="link" id="editBtn" type="button">항목 정리하기</button>
+    </div>
+
+    <h2 id="logTitle">오늘 내가 해낸 것</h2>
+    <ul class="log" id="log"></ul>
+  </main>
+
+  <div class="toast" id="toast" role="status">
+    <span id="toastText"></span>
+    <span class="toast-actions">
+      <button id="memoBtn" type="button">한 줄 남기기</button>
+      <button id="undoBtn" type="button">되돌리기</button>
+    </span>
+    <form class="memo-form" id="memoForm" autocomplete="off">
+      <input id="memoInput" maxlength="80" placeholder="한 줄 남겨도 좋아요 (선택)" />
+      <button type="submit">남기기</button>
+    </form>
+  </div>
+
+  <script>
+    // ── 저장소: 데이터는 이 브라우저 안(localStorage)에만 저장돼요 ──
+    const KEY = "overcome.v1";
+
+    function load() {
+      try {
+        const data = JSON.parse(localStorage.getItem(KEY));
+        if (data && Array.isArray(data.items) && Array.isArray(data.records)) return data;
+      } catch (e) {}
+      return { items: [], records: [] };
+    }
+    function save() {
+      try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) {}
+    }
+
+    let state = load();
+    let editing = false;
+    let lastRecordId = null;
+    let editingRecordId = null;   // "오늘 내가 해낸 것"에서 메모를 고치는 중인 기록
+    let toastTimer = null;
+
+    const $ = (id) => document.getElementById(id);
+    const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+
+    // 오늘 날짜(내 기기 시간 기준)인지 확인
+    function isToday(iso) {
+      const d = new Date(iso), n = new Date();
+      return d.getFullYear() === n.getFullYear() && d.getMonth() === n.getMonth() && d.getDate() === n.getDate();
+    }
+    const todayRecords = () => state.records.filter((r) => isToday(r.at));
+
+    function render() {
+      const today = todayRecords();
+      const list = $("items");
+      list.innerHTML = "";
+      list.parentElement.classList.toggle("editing", editing);
+
+      if (state.items.length === 0) {
+        list.innerHTML = '<li class="empty">아래에 내가 해내고 싶은 작은 일을 적어 보세요.</li>';
+      }
+
+      state.items.forEach((item) => {
+        const n = today.filter((r) => r.itemId === item.id).length;
+        const li = document.createElement("li");
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "item" + (n > 0 ? " did" : "");
+        btn.dataset.id = item.id;
+
+        const name = document.createElement("span");
+        name.className = "name";
+        name.textContent = item.name;
+        btn.appendChild(name);
+
+        const count = document.createElement("span");
+        count.className = "count";
+        count.textContent = n === 0 ? "" : n === 1 ? "내가 해냈다 ✓" : `내가 해냈다 ✓ ×${n}`;
+        btn.appendChild(count);
+
+        const del = document.createElement("span");
+        del.className = "del";
+        del.textContent = "빼기";
+        del.setAttribute("role", "button");
+        btn.appendChild(del);
+
+        btn.addEventListener("click", (e) => {
+          if (editing) {
+            if (e.target === del) removeItem(item.id);
+            return;
+          }
+          record(item, btn);
+        });
+
+        li.appendChild(btn);
+        list.appendChild(li);
+      });
+
+      $("editBtn").textContent = editing ? "다 정리했어요" : "항목 정리하기";
+      $("editBtn").style.display = state.items.length ? "" : "none";
+
+      // 오늘 기록 모아 보기 (최신순)
+      const log = $("log");
+      log.innerHTML = "";
+      $("logTitle").textContent = today.length
+        ? `오늘 내가 해낸 것 · ${today.length}가지`
+        : "오늘 내가 해낸 것";
+      if (today.length === 0) {
+        log.innerHTML = '<li class="empty" style="border:none;justify-content:center">해낸 일이 생기면 여기에 쌓여요.</li>';
+      }
+      [...today].reverse().forEach((r) => {
+        const li = document.createElement("li");
+        const t = document.createElement("time");
+        t.textContent = new Date(r.at).toLocaleTimeString("ko-KR", { hour: "numeric", minute: "2-digit" });
+        const s = document.createElement("span");
+        s.className = "entry";
+        s.textContent = r.name;
+
+        if (editingRecordId === r.id) {
+          // 이 기록의 메모를 쓰거나 고치는 중
+          const input = document.createElement("input");
+          input.className = "memo-edit";
+          input.maxLength = 80;
+          input.value = r.memo || "";
+          input.placeholder = "한 줄 남겨도 좋아요 (선택)";
+          let done = false;
+          const finish = (keep) => {
+            if (done) return;
+            done = true;
+            if (keep) {
+              const text = input.value.trim();
+              if (text) r.memo = text; else delete r.memo;
+              save();
+            }
+            editingRecordId = null;
+            render();
+          };
+          input.addEventListener("keydown", (e) => {
+            if (e.key === "Enter") { e.preventDefault(); finish(true); }
+            if (e.key === "Escape") finish(false);
+          });
+          input.addEventListener("blur", () => finish(true));
+          s.appendChild(input);
+          li.append(t, s);
+          log.appendChild(li);
+          setTimeout(() => input.focus(), 0);
+          return;
+        }
+
+        const m = document.createElement("span");
+        m.className = "memo" + (r.memo ? "" : " hint");
+        m.textContent = r.memo || "탭해서 한 줄 남기기";
+        s.appendChild(m);
+        li.className = "tappable";
+        li.addEventListener("click", () => { editingRecordId = r.id; render(); });
+        li.append(t, s);
+        log.appendChild(li);
+      });
+    }
+
+    function record(item, btn) {
+      const r = { id: uid(), itemId: item.id, name: item.name, at: new Date().toISOString() };
+      state.records.push(r);
+      save();
+      lastRecordId = r.id;
+      render();
+      const fresh = document.querySelector(`.item[data-id="${item.id}"]`);
+      if (fresh) fresh.classList.add("pop");
+      showToast(`"${item.name}" 내가 해냈어요`);
+    }
+
+    function undo() {
+      if (!lastRecordId) return;
+      state.records = state.records.filter((r) => r.id !== lastRecordId);
+      lastRecordId = null;
+      save();
+      render();
+      hideToast();
+    }
+
+    function removeItem(id) {
+      const item = state.items.find((i) => i.id === id);
+      if (!item || !confirm(`"${item.name}" 항목을 목록에서 뺄까요?\n지금까지 해낸 기록은 그대로 남아요.`)) return;
+      state.items = state.items.filter((i) => i.id !== id);
+      save();
+      render();
+    }
+
+    function showToast(text) {
+      $("toastText").textContent = text;
+      $("toast").classList.remove("memo");
+      $("toast").classList.add("show");
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(hideToast, 5000);
+    }
+    function hideToast() { $("toast").classList.remove("show", "memo"); }
+
+    // 한 줄 메모: 기록은 이미 됐고, 원할 때만 덧붙여요
+    function openMemo() {
+      if (!lastRecordId) return;
+      clearTimeout(toastTimer);           // 쓰는 동안엔 사라지지 않게
+      $("memoInput").value = "";
+      $("toast").classList.add("memo");
+      $("memoInput").focus();
+    }
+    $("memoForm").addEventListener("submit", (e) => {
+      e.preventDefault();
+      const text = $("memoInput").value.trim();
+      const r = state.records.find((x) => x.id === lastRecordId);
+      if (r && text) { r.memo = text; save(); render(); }
+      $("memoInput").blur();
+      hideToast();
+    });
+    $("memoInput").addEventListener("keydown", (e) => {
+      if (e.key === "Escape") hideToast();
+    });
+    $("memoBtn").addEventListener("click", openMemo);
+
+    $("addForm").addEventListener("submit", (e) => {
+      e.preventDefault();
+      const name = $("addInput").value.trim();
+      if (!name) return;
+      state.items.push({ id: uid(), name });
+      save();
+      $("addInput").value = "";
+      render();
+    });
+    $("editBtn").addEventListener("click", () => { editing = !editing; render(); });
+    $("undoBtn").addEventListener("click", undo);
+
+    render();
+  </script>
+</body>
+</html>
