@@ -39,6 +39,7 @@
       text-decoration: none;
     }
     .link:hover, .link:focus-visible { color: var(--soft); }
+    .top-right { display: flex; align-items: center; gap: 12px; }
 
     /* 쓰는 곳 */
     .paper { position: relative; flex: 1; display: flex; margin-top: 8px; }
@@ -104,7 +105,10 @@
   <main class="write" id="writeView">
     <div class="top">
       <a class="link" href="index.html">← 오늘 해낸 일</a>
-      <button class="link" id="showKept" type="button">간직한 글</button>
+      <span class="top-right">
+        <button class="link" id="showKept" type="button">간직한 글</button>
+        <span data-help-slot></span>
+      </span>
     </div>
 
     <div class="paper">
@@ -126,6 +130,7 @@
   <main class="kept" id="keptView" hidden>
     <div class="top">
       <button class="link" id="backToWrite" type="button">← 털어놓기</button>
+      <span data-help-slot></span>
     </div>
     <h1>간직한 글</h1>
     <p class="sub">이 기기 안에만 있어요. 나만 볼 수 있어요.</p>
@@ -134,6 +139,7 @@
 
   <div class="whisper" id="whisper" role="status"></div>
 
+  <script src="help.js"></script>
   <script>
     // ── 간직한 글은 이 브라우저 안(localStorage)에만 저장돼요. 흘려보낸 글은 어디에도 남지 않아요. ──
     const KEY = "overcome.vent.v1";
