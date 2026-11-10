@@ -14,41 +14,42 @@
   ];
 
   const css = `
+    /* 색은 theme.css의 공통 색을 써요 */
     .help-btn {
-      font: inherit; font-size: 0.85rem; cursor: pointer;
-      border: 1px solid #eadfd3; background: #fff; color: #6b5d51;
-      border-radius: 999px; padding: 6px 12px; white-space: nowrap;
+      font: inherit; font-size: 0.88rem; cursor: pointer;
+      border: none; background: var(--card); color: var(--text);
+      border-radius: 999px; padding: 7px 14px; white-space: nowrap;
     }
-    .help-btn:active { transform: scale(0.97); }
+    .help-btn:active { transform: scale(0.97); background: var(--card-press); }
     .help-sheet {
       border: none; padding: 0; margin: auto auto 0; width: 100%; max-width: 480px;
-      background: #faf6f0; color: #4a4038; border-radius: 22px 22px 0 0;
-      font-family: inherit; line-height: 1.5;
+      background: var(--bg); color: var(--text); border-radius: 22px 22px 0 0;
+      font-family: inherit; line-height: 1.6;
     }
     .help-sheet::backdrop { background: rgba(74, 64, 56, 0.35); }
     .help-sheet[open] { animation: helpUp .3s ease; }
     @keyframes helpUp { from { transform: translateY(30px); opacity: 0; } to { transform: none; opacity: 1; } }
     @media (prefers-reduced-motion: reduce) { .help-sheet[open] { animation: none; } }
     .help-inner { padding: 22px 18px calc(22px + env(safe-area-inset-bottom)); }
-    .help-sheet h2 { font-size: 1.15rem; margin: 0 0 4px; }
-    .help-sheet .help-sub { color: #8c7f73; font-size: 0.9rem; margin: 0 0 16px; }
+    .help-sheet h2 { font-size: 1.3rem; margin: 0 0 4px; }
+    .help-sheet .help-sub { color: var(--soft); font-size: 0.9rem; margin: 0 0 16px; }
     .help-line {
       display: flex; align-items: center; gap: 14px; text-decoration: none; color: inherit;
-      background: #fff; border: 1px solid #eee5da; border-radius: 16px;
+      background: var(--card); border: none; border-radius: var(--radius);
       padding: 14px 16px; margin-bottom: 10px;
     }
-    .help-line .num { font-size: 1.35rem; font-weight: 700; color: #c9784a; min-width: 5.2em; }
-    .help-line .who { font-size: 0.98rem; }
-    .help-line .who small { display: block; color: #8c7f73; font-size: 0.82rem; }
+    .help-line .num { font-size: 1.35rem; color: var(--accent-deep); flex: 0 0 6.6rem; white-space: nowrap; }
+    .help-line .who { font-size: 0.98rem; flex: 1; min-width: 0; }
+    .help-line .who small { display: block; color: var(--soft); font-size: 0.82rem; }
     .help-emergency { font-size: 0.92rem; margin: 14px 2px 4px; }
-    .help-emergency a { color: #c9784a; font-weight: 700; text-decoration: none; padding: 4px 2px; }
+    .help-emergency a { color: var(--accent-deep); font-size: 1.05rem; text-decoration: none; padding: 4px 2px; }
     .help-note {
-      color: #8c7f73; font-size: 0.82rem; margin: 14px 2px 0;
-      border-top: 1px solid #eee5da; padding-top: 12px;
+      color: var(--soft); font-size: 0.82rem; margin: 14px 2px 0;
+      border-top: 1px solid var(--line); padding-top: 12px;
     }
     .help-close {
       display: block; width: 100%; margin-top: 16px; font: inherit; cursor: pointer;
-      border: none; background: none; color: #8c7f73; padding: 10px;
+      border: none; background: none; color: var(--soft); padding: 10px;
     }
   `;
 

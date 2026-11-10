@@ -1,0 +1,58 @@
+/* 차곡의 공통 디자인: 모든 화면이 이 파일 하나를 함께 써요.
+   색이나 글꼴을 바꾸고 싶으면 여기만 고치면 모든 화면이 같이 바뀌어요. */
+
+/* 고운돋움 (SIL Open Font License, fonts/OFL.txt)
+   한글 11,172자·영문·숫자·문장부호만 남겨 가볍게 줄인 파일이에요. 기기에 보관돼서 인터넷 없이도 보여요. */
+@font-face {
+  font-family: "Gowun Dodum";
+  src: url("fonts/GowunDodum-Regular.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+:root {
+  /* 바탕 */
+  --bg: #faf6f0;          /* 크림 */
+  --card: #f3e9dc;        /* 크림보다 살짝 진한 바탕: 버튼·입력칸·카드 */
+  --card-press: #ecdecc;  /* 누르고 있을 때 */
+  --line: #ebdfd0;        /* 아주 옅은 구분선 */
+
+  /* 글자 */
+  --text: #4a4038;
+  --soft: #75685d;        /* 보조 글자: 크림 위에서도 잘 읽히는 진하기 */
+  --faint: #b2a497;       /* 아주 조용한 힌트 */
+
+  /* 살구·복숭아 (조약돌 색) */
+  --accent: #e8a87c;
+  --accent-deep: #b4693e; /* 살구 바탕 위 글자 */
+  --accent-soft: #fbe8da;
+  --peach: #f6d8c2;       /* 해낸 항목 바탕 */
+  --pebble-1: #e09a6b;
+  --pebble-2: #e8a87c;
+  --pebble-3: #eeb48c;
+  --pebble-4: #f2c4a0;
+
+  --radius: 16px;
+  --font: "Gowun Dodum", -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Noto Sans KR", sans-serif;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font);
+  line-height: 1.6;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-font-smoothing: antialiased;
+  /* 한국어가 낱말 중간에서 끊기지 않게 (아주 긴 낱말만 필요할 때 끊어요) */
+  word-break: keep-all;
+  overflow-wrap: break-word;
+}
+button, input, textarea, select { font-family: inherit; }
+
+/* 고운돋움은 굵은 글꼴이 따로 없어요. 억지로 굵게 만들지 않고, 크기로 제목을 구분해요. */
+h1, h2, h3, strong, b { font-weight: 400; }
+h1 { letter-spacing: -0.01em; }

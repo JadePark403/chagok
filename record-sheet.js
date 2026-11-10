@@ -7,7 +7,7 @@
   const css = `
     .rec-sheet {
       border: none; padding: 0; margin: auto auto 0; width: 100%; max-width: 480px;
-      background: #faf6f0; color: #4a4038; border-radius: 22px 22px 0 0;
+      background: var(--bg); color: var(--text); border-radius: 22px 22px 0 0;
       font-family: inherit; line-height: 1.5;
     }
     .rec-sheet::backdrop { background: rgba(74, 64, 56, 0.3); }
@@ -15,29 +15,30 @@
     @keyframes recUp { from { transform: translateY(24px); opacity: 0; } to { transform: none; opacity: 1; } }
     @media (prefers-reduced-motion: reduce) { .rec-sheet[open] { animation: none; } }
     .rec-inner { padding: 20px 18px calc(20px + env(safe-area-inset-bottom)); }
-    .rec-when { color: #8c7f73; font-size: 0.85rem; margin: 0; }
-    .rec-name { font-size: 1.1rem; font-weight: 700; margin: 2px 0 14px; }
-    .rec-name small { font-weight: 400; color: #6f9a73; font-size: 0.85rem; margin-left: 6px; }
+    .rec-when { color: var(--soft); font-size: 0.85rem; margin: 0; }
+    .rec-name { font-size: 1.2rem; margin: 2px 0 14px; }
+    .rec-name small { font-weight: 400; color: var(--accent-deep); font-size: 0.85rem; margin-left: 6px; }
     .rec-memo {
       display: block; width: 100%; font: inherit; color: inherit;
-      padding: 12px 14px; border: 1px solid #eee5da; border-radius: 12px;
-      background: #fff; outline: none;
+      padding: 12px 14px; border: 1.5px solid transparent; border-radius: 12px;
+      background: var(--card); outline: none;
     }
-    .rec-memo:focus { border-color: #e8a87c; }
+    .rec-memo::placeholder { color: var(--faint); }
+    .rec-memo:focus { border-color: var(--accent); background: var(--bg); }
     .rec-row { display: flex; align-items: center; gap: 8px; margin-top: 16px; flex-wrap: wrap; }
     .rec-row[hidden] { display: none; }
     .rec-row .grow { margin-right: auto; }
     .rec-btn {
       font: inherit; font-size: 0.95rem; cursor: pointer; border-radius: 12px; padding: 10px 16px;
-      border: 1px solid #eee5da; background: #fff; color: #4a4038;
+      border: none; background: var(--card); color: var(--text); white-space: nowrap;
     }
-    .rec-btn.main { background: #e8a87c; border-color: #e8a87c; color: #fff; }
-    .rec-btn.quiet { border-color: transparent; background: none; color: #8c7f73; }
+    .rec-btn.main { background: var(--accent); color: #fff; }
+    .rec-btn.quiet { border-color: transparent; background: none; color: var(--soft); }
     .rec-link {
       font: inherit; font-size: 0.88rem; cursor: pointer; border: none; background: none;
-      color: #a8998c; padding: 8px 2px; text-decoration: underline; text-underline-offset: 3px;
+      color: var(--soft); padding: 8px 2px; text-decoration: underline; text-underline-offset: 3px;
     }
-    .rec-ask { color: #6b5d51; font-size: 0.92rem; width: 100%; margin: 0 0 2px; }
+    .rec-ask { color: var(--text); font-size: 0.92rem; width: 100%; margin: 0 0 2px; }
   `;
 
   function load() {
