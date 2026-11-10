@@ -72,7 +72,8 @@
         <p class="help-emergency">지금 몸이 위험하다면 바로
           ${EMERGENCY.map((e) => `<a href="tel:${e.tel}">${e.number}</a>`).join(" 또는 ")}
         </p>
-        <p class="help-note">이 앱은 치료 앱이 아니에요. 전문적인 상담이나 치료를 대신할 수 없어요.<br>
+        <p class="help-note">이 앱은 마음을 조금 가볍게 하려고 만든 작은 공간이에요.
+          치료를 대신하지는 않아요. 힘든 마음이 오래 이어진다면, 전문가와 이야기해 보는 것도 괜찮아요.<br>
           내가 쓴 기록은 이 기기 안에만 있고, 어디로도 보내지지 않아요.</p>
         <button class="help-close" type="button">닫기</button>
       </div>`;

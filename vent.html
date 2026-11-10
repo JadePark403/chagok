@@ -32,7 +32,12 @@
     }
 
     /* 위쪽: 아주 조용한 길잡이 */
-    .top { display: flex; justify-content: space-between; align-items: center; min-height: 36px; }
+    /* 위쪽 줄은 스크롤해도 붙어 있어서, "도움받을 곳"이 언제나 한 번에 닿아요 */
+    .top {
+      display: flex; justify-content: space-between; align-items: center; min-height: 36px;
+      position: sticky; top: 0; z-index: 5; background: var(--bg);
+      margin: -14px -18px 0; padding: 10px 18px 6px;
+    }
     .link {
       border: none; background: none; color: var(--faint);
       font: inherit; font-size: 0.85rem; cursor: pointer; padding: 6px 2px;
