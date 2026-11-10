@@ -171,12 +171,7 @@
     .log .entry { flex: 1; min-width: 0; }
     .log li.tappable { cursor: pointer; border-radius: 8px; }
     .log li.tappable:active { background: var(--accent-soft); }
-    .memo-edit {
-      display: block; width: 100%; margin-top: 6px;
-      font: inherit; font-size: 0.9rem; color: inherit;
-      padding: 10px 12px; border: 1px solid var(--accent);
-      border-radius: 10px; background: var(--card); outline: none;
-    }
+    .log li.tappable:focus-visible { outline: 2px solid var(--soft); outline-offset: 2px; }
 
     /* 인트로 */
     .splash { display: none; }
@@ -247,6 +242,7 @@
   </div>
 
   <script src="help.js"></script>
+  <script src="record-sheet.js"></script>
   <script>
     // ── 저장소: 데이터는 이 브라우저 안(localStorage)에만 저장돼요 ──
     const KEY = "overcome.v1";
@@ -265,7 +261,6 @@
     let state = load();
     let editing = false;
     let lastRecordId = null;
-    let editingRecordId = null;   // "오늘 내가 해낸 것"에서 메모를 고치는 중인 기록
     let toastTimer = null;
 
     const $ = (id) => document.getElementById(id);
@@ -344,43 +339,17 @@
         s.className = "entry";
         s.textContent = r.name;
 
-        if (editingRecordId === r.id) {
-          // 이 기록의 메모를 쓰거나 고치는 중
-          const input = document.createElement("input");
-          input.className = "memo-edit";
-          input.maxLength = 80;
-          input.value = r.memo || "";
-          input.placeholder = "한 줄 남겨도 좋아요 (선택)";
-          let done = false;
-          const finish = (keep) => {
-            if (done) return;
-            done = true;
-            if (keep) {
-              const text = input.value.trim();
-              if (text) r.memo = text; else delete r.memo;
-              save();
-            }
-            editingRecordId = null;
-            render();
-          };
-          input.addEventListener("keydown", (e) => {
-            if (e.key === "Enter") { e.preventDefault(); finish(true); }
-            if (e.key === "Escape") finish(false);
-          });
-          input.addEventListener("blur", () => finish(true));
-          s.appendChild(input);
-          li.append(t, s);
-          log.appendChild(li);
-          setTimeout(() => input.focus(), 0);
-          return;
-        }
-
         const m = document.createElement("span");
         m.className = "memo" + (r.memo ? "" : " hint");
         m.textContent = r.memo || "탭해서 한 줄 남기기";
         s.appendChild(m);
+        // 탭하면 작은 창이 열려요: 메모 쓰기·고치기, 잘못 누른 기록 빼기
         li.className = "tappable";
-        li.addEventListener("click", () => { editingRecordId = r.id; render(); });
+        li.tabIndex = 0;
+        li.setAttribute("role", "button");
+        const open = () => openRecordSheet(r.id, () => { state = load(); render(); });
+        li.addEventListener("click", open);
+        li.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); open(); } });
         li.append(t, s);
         log.appendChild(li);
       });

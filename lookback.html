@@ -68,7 +68,6 @@
       transition: transform .2s ease;
     }
     .pebble:focus-visible { outline: 2px solid var(--soft); outline-offset: 2px; }
-    .pebble.picked { transform: translateY(-4px) rotate(var(--rot)) !important; }
     .pebble.drop { animation: drop .55s cubic-bezier(.3, 1.4, .5, 1) both; }
     @keyframes drop {
       from { opacity: 0; transform: translateY(-40px) rotate(var(--rot)); }
@@ -87,9 +86,15 @@
     .mini { display: flex; gap: 2px; margin-left: auto; flex-wrap: wrap; justify-content: flex-end; max-width: 50%; }
     .mini span { width: 10px; height: 8px; border-radius: 50%; }
     .day ul { list-style: none; padding: 0; margin: 0; }
-    .day li { font-size: 0.95rem; padding: 2px 0; }
-    .day li .times { color: var(--soft); font-size: 0.85rem; }
-    .day li .memo { display: block; color: var(--soft); font-size: 0.85rem; padding-left: 0.2em; }
+    .day li {
+      display: flex; gap: 10px; font-size: 0.95rem; padding: 6px 4px; margin: 0 -4px;
+      border-radius: 8px; cursor: pointer;
+    }
+    .day li:active { background: var(--accent-soft); }
+    .day li:focus-visible { outline: 2px solid var(--soft); outline-offset: 1px; }
+    .day li time { color: var(--soft); font-size: 0.85rem; min-width: 4.2em; padding-top: 1px; }
+    .day li .memo { display: block; color: var(--soft); font-size: 0.85rem; }
+    .day li .memo.hint { color: var(--faint); font-size: 0.8rem; }
     .quiet-note { color: var(--soft); font-size: 0.85rem; text-align: center; margin: 22px 0 0; }
 
     @media (prefers-reduced-motion: reduce) {
@@ -117,8 +122,10 @@
   </main>
 
   <script src="help.js"></script>
+  <script src="record-sheet.js"></script>
   <script>
-    // 이 화면은 "오늘 해낸 일"에서 쌓은 기록을 읽기만 해요. 아무것도 바꾸거나 지우지 않아요.
+    // 이 화면은 "오늘 해낸 일"에서 쌓은 기록을 보여 줘요.
+    // 기록을 고치거나 빼는 일은 record-sheet.js의 작은 창에서만 해요.
     const KEY = "overcome.v1";
     const $ = (id) => document.getElementById(id);
 
@@ -143,10 +150,6 @@
     const lastDay = new Date(weekEnd.getTime() - 1);
     $("range").textContent = `${fmtShort(weekStart)} – ${fmtShort(lastDay)}`;
 
-    const records = load().records
-      .map((r) => ({ ...r, date: new Date(r.at) }))
-      .filter((r) => r.date >= weekStart && r.date < weekEnd)
-      .sort((a, b) => a.date - b.date);   // 먼저 해낸 것이 아래에 깔려요
 
     // 조약돌 모양: 기록마다 정해진 모양이라, 다시 열어도 같은 조약돌이에요
     const COLORS = ["#e09a6b", "#e8a87c", "#eeb48c", "#f2c4a0"];
@@ -166,113 +169,121 @@
       return { w, ht, rot, color, radius: `${a}% ${100 - a}% ${b}% ${100 - b}% / ${55 + pick(10, 24)}% ${52 + pick(10, 26)}% ${45 - pick(8, 28)}% ${42 + pick(8, 29)}%` };
     }
 
-    // 조약돌 쌓기
-    const pile = $("pile");
-    if (records.length === 0) {
-      pile.innerHTML = '<p class="pile-empty">작은 일 하나를 해내면<br>여기에 조약돌이 하나 놓여요.</p>';
-      $("count").textContent = "";
-    } else {
-      const totalDrop = Math.min(1400, records.length * 90);
-      records.forEach((r, i) => {
-        const look = pebbleLook(r.id);
-        const p = document.createElement("button");
-        p.type = "button";
-        p.className = "pebble drop";
-        p.style.width = look.w + "px";
-        p.style.height = look.ht + "px";
-        p.style.background = `radial-gradient(circle at 32% 30%, rgba(255,255,255,.45), transparent 45%), ${look.color}`;
-        p.style.borderRadius = look.radius;
-        p.style.setProperty("--rot", look.rot + "deg");
-        p.style.transform = `rotate(${look.rot}deg)`;
-        p.style.animationDelay = (records.length > 1 ? (i / (records.length - 1)) * totalDrop : 0) + "ms";
-        const label = `${fmtShort(r.date)} ${fmtTime(r.date)} · ${r.name}`;
-        p.setAttribute("aria-label", label);
-        p.addEventListener("click", () => {
-          document.querySelectorAll(".pebble.picked").forEach((x) => x.classList.remove("picked"));
-          p.classList.add("picked");
-          $("caption").textContent = label + (r.memo ? ` — ${r.memo}` : "");
+    // 기록을 탭하면 "오늘 내가 해낸 것"과 같은 작은 창이 열려요.
+    // 고치거나 뺀 뒤에는 조약돌이 다시 떨어지지 않고 조용히 바뀌어요.
+    const openSheet = (id) => openRecordSheet(id, () => render(false));
+    const tappable = (el, id) => {
+      el.tabIndex = 0;
+      el.setAttribute("role", "button");
+      el.addEventListener("click", () => openSheet(id));
+      el.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); openSheet(id); } });
+    };
+
+    function render(animate) {
+      const records = load().records
+        .map((r) => ({ ...r, date: new Date(r.at) }))
+        .filter((r) => r.date >= weekStart && r.date < weekEnd)
+        .sort((a, b) => a.date - b.date);   // 먼저 해낸 것이 아래에 깔려요
+
+      // 조약돌 쌓기
+      const pile = $("pile");
+      pile.innerHTML = "";
+      if (records.length === 0) {
+        pile.innerHTML = '<p class="pile-empty">작은 일 하나를 해내면<br>여기에 조약돌이 하나 놓여요.</p>';
+        $("count").textContent = "";
+        $("caption").textContent = "";
+      } else {
+        const totalDrop = Math.min(1400, records.length * 90);
+        records.forEach((r, i) => {
+          const look = pebbleLook(r.id);
+          const p = document.createElement("button");
+          p.type = "button";
+          p.className = "pebble" + (animate ? " drop" : "");
+          p.style.width = look.w + "px";
+          p.style.height = look.ht + "px";
+          p.style.background = `radial-gradient(circle at 32% 30%, rgba(255,255,255,.45), transparent 45%), ${look.color}`;
+          p.style.borderRadius = look.radius;
+          p.style.setProperty("--rot", look.rot + "deg");
+          p.style.transform = `rotate(${look.rot}deg)`;
+          if (animate) p.style.animationDelay = (records.length > 1 ? (i / (records.length - 1)) * totalDrop : 0) + "ms";
+          p.setAttribute("aria-label", `${fmtShort(r.date)} ${fmtTime(r.date)} · ${r.name}`);
+          p.addEventListener("click", () => openSheet(r.id));
+          pile.appendChild(p);
         });
-        pile.appendChild(p);
-      });
-      $("count").textContent = `이번 주에 조약돌 ${records.length}개가 쌓였어요.`;
-      $("caption").textContent = "조약돌을 누르면 무엇을 해냈는지 보여요.";
-    }
-
-    // 날마다 해낸 것: 해낸 것이 있는 날만 보여 줘요 (빈 날은 따로 표시하지 않아요)
-    const byDay = new Map();
-    for (const r of records) {
-      const k = dayKey(r.date);
-      if (!byDay.has(k)) byDay.set(k, { date: r.date, list: [] });
-      byDay.get(k).list.push(r);
-    }
-    const days = $("days");
-    if (byDay.size > 0) {
-      const h2 = document.createElement("h2");
-      h2.textContent = "이번 주에 내가 해낸 것";
-      days.appendChild(h2);
-    }
-    for (const [k, { date, list }] of byDay) {
-      const box = document.createElement("div");
-      box.className = "day";
-
-      const head = document.createElement("div");
-      head.className = "day-head";
-      const title = document.createElement("strong");
-      title.textContent = fmtDay(date);
-      head.appendChild(title);
-      if (k === todayKey) {
-        const t = document.createElement("span");
-        t.className = "today";
-        t.textContent = "오늘";
-        head.appendChild(t);
+        $("count").textContent = `이번 주에 조약돌 ${records.length}개가 쌓였어요.`;
+        $("caption").textContent = "조약돌을 누르면 그 기록을 보고 고칠 수 있어요.";
       }
-      const mini = document.createElement("span");
-      mini.className = "mini";
-      mini.setAttribute("aria-hidden", "true");
-      for (const r of list) {
-        const s = document.createElement("span");
-        s.style.background = pebbleLook(r.id).color;
-        mini.appendChild(s);
-      }
-      head.appendChild(mini);
-      box.appendChild(head);
 
-      // 같은 일은 한 줄로 모아요
-      const groups = new Map();
-      for (const r of list) {
-        if (!groups.has(r.name)) groups.set(r.name, []);
-        groups.get(r.name).push(r);
+      // 날마다 해낸 것: 해낸 것이 있는 날만 보여 줘요 (빈 날은 따로 표시하지 않아요)
+      const byDay = new Map();
+      for (const r of records) {
+        const k = dayKey(r.date);
+        if (!byDay.has(k)) byDay.set(k, { date: r.date, list: [] });
+        byDay.get(k).list.push(r);
       }
-      const ul = document.createElement("ul");
-      for (const [name, rs] of groups) {
-        const li = document.createElement("li");
-        li.append(name);
-        if (rs.length > 1) {
-          const n = document.createElement("span");
-          n.className = "times";
-          n.textContent = ` ×${rs.length}`;
-          li.appendChild(n);
+      const days = $("days");
+      days.innerHTML = "";
+      if (byDay.size > 0) {
+        const h2 = document.createElement("h2");
+        h2.textContent = "이번 주에 내가 해낸 것";
+        days.appendChild(h2);
+      }
+      for (const [k, { date, list }] of byDay) {
+        const box = document.createElement("div");
+        box.className = "day";
+
+        const head = document.createElement("div");
+        head.className = "day-head";
+        const title = document.createElement("strong");
+        title.textContent = fmtDay(date);
+        head.appendChild(title);
+        if (k === todayKey) {
+          const t = document.createElement("span");
+          t.className = "today";
+          t.textContent = "오늘";
+          head.appendChild(t);
         }
-        for (const r of rs) {
-          if (!r.memo) continue;
+        const mini = document.createElement("span");
+        mini.className = "mini";
+        mini.setAttribute("aria-hidden", "true");
+        for (const r of list) {
+          const s = document.createElement("span");
+          s.style.background = pebbleLook(r.id).color;
+          mini.appendChild(s);
+        }
+        head.appendChild(mini);
+        box.appendChild(head);
+
+        // 기록 하나에 한 줄씩: 탭하면 메모를 쓰거나 고치고, 잘못 누른 기록은 뺄 수 있어요
+        const ul = document.createElement("ul");
+        for (const r of list) {
+          const li = document.createElement("li");
+          const t = document.createElement("time");
+          t.textContent = fmtTime(r.date);
+          const s = document.createElement("span");
+          s.textContent = r.name;
           const m = document.createElement("span");
-          m.className = "memo";
-          m.textContent = r.memo;
-          li.appendChild(m);
+          m.className = "memo" + (r.memo ? "" : " hint");
+          m.textContent = r.memo || "탭해서 한 줄 남기기";
+          s.appendChild(m);
+          li.append(t, s);
+          tappable(li, r.id);
+          ul.appendChild(li);
         }
-        ul.appendChild(li);
+        box.appendChild(ul);
+        days.appendChild(box);
       }
-      box.appendChild(ul);
-      days.appendChild(box);
+      // 이번 주에 지나간 날 중 기록이 없는 날이 있을 때만, 개수 없이 조용히 한마디
+      const passedDays = Math.floor((new Date(now.getFullYear(), now.getMonth(), now.getDate()) - weekStart) / 86400000) + 1;
+      if (byDay.size > 0 && byDay.size < passedDays) {
+        const note = document.createElement("p");
+        note.className = "quiet-note";
+        note.textContent = "쉬어 간 날도 이번 주의 일부예요.";
+        days.appendChild(note);
+      }
     }
-    // 이번 주에 지나간 날 중 기록이 없는 날이 있을 때만, 개수 없이 조용히 한마디
-    const passedDays = Math.floor((new Date(now.getFullYear(), now.getMonth(), now.getDate()) - weekStart) / 86400000) + 1;
-    if (byDay.size > 0 && byDay.size < passedDays) {
-      const note = document.createElement("p");
-      note.className = "quiet-note";
-      note.textContent = "쉬어 간 날도 이번 주의 일부예요.";
-      days.appendChild(note);
-    }
+
+    render(true);
   </script>
 </body>
 </html>
