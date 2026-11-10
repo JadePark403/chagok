@@ -16,6 +16,13 @@
     if ("serviceWorker" in navigator) {
       addEventListener("load", () => navigator.serviceWorker.register("sw.js").catch(() => {}));
     }
+    // 인트로: 앱을 새로 열 때만 보여요. 앱 안에서 다른 화면을 다녀오면 보이지 않아요.
+    // (sessionStorage는 앱을 닫으면 비워지는 임시 메모장이에요)
+    (function () {
+      let seen = false;
+      try { seen = sessionStorage.getItem("chagok.splash") === "1"; sessionStorage.setItem("chagok.splash", "1"); } catch (e) {}
+      if (!seen) document.documentElement.classList.add("splash-on");
+    })();
   </script>
   <style>
     :root {
@@ -170,9 +177,39 @@
       padding: 10px 12px; border: 1px solid var(--accent);
       border-radius: 10px; background: var(--card); outline: none;
     }
+
+    /* 인트로 */
+    .splash { display: none; }
+    .splash-on .splash {
+      display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px;
+      position: fixed; inset: 0; z-index: 100;
+      background: var(--bg); cursor: pointer;
+      transition: opacity .35s ease;
+    }
+    .splash svg { width: 96px; height: 96px; }
+    .splash .name { font-size: 1.5rem; font-weight: 700; letter-spacing: 0.08em; color: var(--text); }
+    .splash rect { animation: settle .5s cubic-bezier(.3, 1.3, .5, 1) both; }
+    .splash rect:nth-child(2) { animation-delay: .08s; }
+    .splash rect:nth-child(3) { animation-delay: .16s; }
+    .splash .name { animation: rise .45s ease .1s both; }
+    @keyframes settle { from { opacity: 0; transform: translateY(-40px); } to { opacity: 1; transform: none; } }
+    @keyframes rise { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+    .splash.leaving { opacity: 0; pointer-events: none; }
+    @media (prefers-reduced-motion: reduce) {
+      .splash-on .splash { transition: none; }
+      .splash rect, .splash .name { animation: none; }
+    }
   </style>
 </head>
 <body>
+  <div class="splash" id="splash" aria-hidden="true">
+    <svg viewBox="120 120 272 272" role="img">
+      <rect x="120" y="297" width="272" height="76" rx="30" fill="#e09a6b"/>
+      <rect x="156" y="215" width="216" height="70" rx="28" fill="#e8a87c"/>
+      <rect x="172" y="139" width="156" height="64" rx="26" fill="#f2c4a0"/>
+    </svg>
+    <div class="name">차곡</div>
+  </div>
   <main>
     <div class="head">
       <h1>오늘 해낸 일</h1>
@@ -420,6 +457,25 @@
     $("undoBtn").addEventListener("click", undo);
 
     render();
+
+    // 인트로 걷기: 1초 안쪽에 부드럽게 사라지고, 탭하면 바로 넘어가요
+    (function () {
+      const splash = $("splash");
+      if (!document.documentElement.classList.contains("splash-on")) { splash.remove(); return; }
+      const calm = matchMedia("(prefers-reduced-motion: reduce)").matches;
+      let gone = false;
+      const finish = () => { splash.remove(); document.documentElement.classList.remove("splash-on"); };
+      const leave = (quick) => {
+        if (gone) return;
+        gone = true;
+        if (calm) { finish(); return; }                 // 움직임 줄이기: 그냥 사라져요
+        if (quick) splash.style.transitionDuration = "0.15s";
+        splash.classList.add("leaving");
+        setTimeout(finish, quick ? 200 : 400);
+      };
+      splash.addEventListener("pointerdown", () => leave(true));
+      setTimeout(() => leave(false), calm ? 400 : 550); // 보통: 0.55초 보이고 0.35초 사라짐
+    })();
   </script>
 </body>
 </html>
