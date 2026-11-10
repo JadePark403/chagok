@@ -3,7 +3,20 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <title>오늘 해낸 일</title>
+  <title>차곡</title>
+  <!-- PWA: 폰 홈 화면에 설치하고, 인터넷이 끊겨도 열리게 -->
+  <link rel="manifest" href="manifest.webmanifest" />
+  <meta name="theme-color" content="#faf6f0" />
+  <link rel="icon" href="icon.svg" type="image/svg+xml" />
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-title" content="차곡" />
+  <script>
+    if ("serviceWorker" in navigator) {
+      addEventListener("load", () => navigator.serviceWorker.register("sw.js").catch(() => {}));
+    }
+  </script>
   <style>
     :root {
       --bg: #faf6f0;

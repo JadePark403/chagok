@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!-- 차곡: 작은 것이 차곡차곡 쌓이는 모양 -->
+  <rect width="512" height="512" fill="#faf6f0"/>
+  <rect x="120" y="297" width="272" height="76" rx="30" fill="#e09a6b"/>
+  <rect x="156" y="215" width="216" height="70" rx="28" fill="#e8a87c"/>
+  <rect x="172" y="139" width="156" height="64" rx="26" fill="#f2c4a0"/>
+</svg>
