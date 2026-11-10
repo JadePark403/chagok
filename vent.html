@@ -98,7 +98,14 @@
     .kept .body { white-space: pre-wrap; word-break: break-word; margin: 6px 0 4px; }
     .kept .row { text-align: right; }
     .kept .empty { color: var(--soft); text-align: center; padding: 40px 12px; background: none; border: none; }
-    .kept .scatter { position: absolute; }
+    /* 흩어지는 글자가 원래 글과 똑같은 자리·크기에서 시작하도록 */
+    .kept .kept-layer {
+      position: absolute; inset: auto; margin: 0; padding: 0;
+      font-size: inherit; line-height: inherit;
+    }
+    .kept .row { display: flex; gap: 8px; justify-content: flex-end; align-items: center; flex-wrap: wrap; min-height: 36px; }
+    .kept .ask { color: var(--soft); font-size: 0.85rem; margin-right: auto; }
+    .btn.small { padding: 7px 12px; font-size: 0.88rem; border-radius: 12px; }
 
     @media (prefers-reduced-motion: reduce) {
       .fade-in { animation: none; }
@@ -286,25 +293,52 @@
         body.className = "body";
         body.textContent = item.text;
         const layer = document.createElement("div");
-        layer.className = "scatter body";
+        layer.className = "scatter kept-layer";
+        layer.setAttribute("aria-hidden", "true");
         const row = document.createElement("div");
         row.className = "row";
-        const rel = document.createElement("button");
-        rel.className = "link";
-        rel.type = "button";
-        rel.textContent = "이제 흘려보내기";
-        rel.addEventListener("click", async () => {
-          if (!confirm("이 글을 흘려보낼까요?\n흘려보내면 다시 볼 수 없어요.")) return;
+
+        // 처음엔 "이제 흘려보내기"만 보이고, 누르면 그 자리에서 한 번 더 물어봐요
+        const showAsk = () => {
+          row.innerHTML = "";
+          const rel = document.createElement("button");
+          rel.className = "link";
+          rel.type = "button";
+          rel.textContent = "이제 흘려보내기";
+          rel.addEventListener("click", showConfirm);
+          row.appendChild(rel);
+        };
+        const showConfirm = () => {
+          row.innerHTML = "";
+          const msg = document.createElement("span");
+          msg.className = "ask";
+          msg.textContent = "흘려보내면 다시 볼 수 없어요.";
+          const stay = document.createElement("button");
+          stay.className = "btn quiet small";
+          stay.type = "button";
+          stay.textContent = "그대로 둘래요";
+          stay.addEventListener("click", showAsk);
+          const go = document.createElement("button");
+          go.className = "btn small";
+          go.type = "button";
+          go.textContent = "흘려보내기";
+          go.addEventListener("click", release);
+          row.append(msg, stay, go);
+          row.classList.add("fade-in");
+        };
+        // 털어놓기의 흘려보내기와 똑같이: 글자가 흩어지고 → "흘려보냈어요."
+        const release = async () => {
           saveKept(loadKept().filter((x) => x.id !== item.id));
-          rel.disabled = true;
+          row.style.visibility = "hidden";
           layer.style.top = body.offsetTop + "px";
           layer.style.left = body.offsetLeft + "px";
           layer.style.width = body.offsetWidth + "px";
           await scatterText(item.text, layer, body);
           await li.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 400, fill: "forwards" }).finished;
           renderKept();
-        });
-        row.appendChild(rel);
+          whisper("흘려보냈어요.");
+        };
+        showAsk();
         li.append(t, body, layer, row);
         ul.appendChild(li);
       }
