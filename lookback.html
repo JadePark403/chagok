@@ -1,0 +1,278 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>돌아보기 · 차곡</title>
+  <!-- PWA: 폰 홈 화면에 설치하고, 인터넷이 끊겨도 열리게 -->
+  <link rel="manifest" href="manifest.webmanifest" />
+  <meta name="theme-color" content="#faf6f0" />
+  <link rel="icon" href="icon.svg" type="image/svg+xml" />
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-title" content="차곡" />
+  <script>
+    if ("serviceWorker" in navigator) {
+      addEventListener("load", () => navigator.serviceWorker.register("sw.js").catch(() => {}));
+    }
+  </script>
+  <style>
+    :root {
+      --bg: #faf6f0;
+      --card: #ffffff;
+      --text: #4a4038;
+      --soft: #8c7f73;
+      --faint: #c4b8ac;
+      --accent: #e8a87c;
+      --accent-soft: #fbe8da;
+      --line: #eee5da;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Noto Sans KR", sans-serif;
+      line-height: 1.5;
+      -webkit-tap-highlight-color: transparent;
+    }
+    main { max-width: 480px; margin: 0 auto; padding: 14px 18px 60px; }
+
+    /* 위쪽 줄은 스크롤해도 붙어 있어서, "도움받을 곳"이 언제나 한 번에 닿아요 */
+    .top {
+      display: flex; justify-content: space-between; align-items: center; min-height: 36px;
+      position: sticky; top: 0; z-index: 5; background: var(--bg);
+      margin: -14px -18px 0; padding: 10px 18px 6px;
+    }
+    .link { color: var(--faint); font-size: 0.85rem; text-decoration: none; padding: 6px 2px; }
+    .link:hover, .link:focus-visible { color: var(--soft); }
+
+    h1 { font-size: 1.4rem; margin: 14px 0 2px; }
+    .range { color: var(--soft); font-size: 0.9rem; margin: 0 0 18px; }
+
+    /* 조약돌이 쌓이는 곳 */
+    .pile-wrap {
+      background: var(--card); border: 1px solid var(--line); border-radius: 22px;
+      padding: 22px 16px 14px; margin-bottom: 10px;
+    }
+    .pile {
+      display: flex; flex-wrap: wrap-reverse; justify-content: center; align-content: flex-start;
+      gap: 0 3px; min-height: 120px; max-width: 320px; margin: 0 auto;
+      padding: 0 0 9px; border-bottom: 2px solid var(--line);
+    }
+    .pebble {
+      border: none; padding: 0; cursor: pointer; display: block;
+      margin: -3px 0;   /* 위아래 조약돌이 살짝 포개지게 */
+      box-shadow: inset -3px -4px 0 rgba(120, 70, 40, 0.08);
+      transition: transform .2s ease;
+    }
+    .pebble:focus-visible { outline: 2px solid var(--soft); outline-offset: 2px; }
+    .pebble.picked { transform: translateY(-4px) rotate(var(--rot)) !important; }
+    .pebble.drop { animation: drop .55s cubic-bezier(.3, 1.4, .5, 1) both; }
+    @keyframes drop {
+      from { opacity: 0; transform: translateY(-40px) rotate(var(--rot)); }
+      to   { opacity: 1; transform: translateY(0) rotate(var(--rot)); }
+    }
+    .pile-empty { color: var(--soft); text-align: center; font-size: 0.95rem; align-self: center; padding: 20px 8px; }
+    .count { text-align: center; margin: 12px 0 0; font-size: 0.98rem; }
+    .caption { text-align: center; color: var(--soft); font-size: 0.88rem; min-height: 1.5em; margin: 4px 0 0; }
+
+    /* 날마다 해낸 것 */
+    h2 { font-size: 1.05rem; margin: 28px 0 8px; }
+    .day { padding: 12px 2px; border-bottom: 1px solid var(--line); }
+    .day-head { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; }
+    .day-head strong { font-size: 0.98rem; }
+    .day-head .today { font-size: 0.75rem; color: #b06a3e; background: var(--accent-soft); border-radius: 999px; padding: 1px 8px; }
+    .mini { display: flex; gap: 2px; margin-left: auto; flex-wrap: wrap; justify-content: flex-end; max-width: 50%; }
+    .mini span { width: 10px; height: 8px; border-radius: 50%; }
+    .day ul { list-style: none; padding: 0; margin: 0; }
+    .day li { font-size: 0.95rem; padding: 2px 0; }
+    .day li .times { color: var(--soft); font-size: 0.85rem; }
+    .day li .memo { display: block; color: var(--soft); font-size: 0.85rem; padding-left: 0.2em; }
+    .quiet-note { color: var(--soft); font-size: 0.85rem; text-align: center; margin: 22px 0 0; }
+
+    @media (prefers-reduced-motion: reduce) {
+      .pebble.drop { animation: none; }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <div class="top">
+      <a class="link" href="index.html">← 오늘 해낸 일</a>
+      <span data-help-slot></span>
+    </div>
+
+    <h1>이번 주 돌아보기</h1>
+    <p class="range" id="range"></p>
+
+    <section class="pile-wrap" aria-label="이번 주에 쌓인 조약돌">
+      <div class="pile" id="pile"></div>
+      <p class="count" id="count"></p>
+      <p class="caption" id="caption" role="status"></p>
+    </section>
+
+    <div id="days"></div>
+  </main>
+
+  <script src="help.js"></script>
+  <script>
+    // 이 화면은 "오늘 해낸 일"에서 쌓은 기록을 읽기만 해요. 아무것도 바꾸거나 지우지 않아요.
+    const KEY = "overcome.v1";
+    const $ = (id) => document.getElementById(id);
+
+    function load() {
+      try {
+        const data = JSON.parse(localStorage.getItem(KEY));
+        if (data && Array.isArray(data.records)) return data;
+      } catch (e) {}
+      return { items: [], records: [] };
+    }
+
+    // 이번 주: 월요일 0시부터 다음 주 월요일 0시 전까지 (내 기기 시간 기준)
+    const now = new Date();
+    const weekStart = new Date(now.getFullYear(), now.getMonth(), now.getDate() - ((now.getDay() + 6) % 7));
+    const weekEnd = new Date(weekStart.getFullYear(), weekStart.getMonth(), weekStart.getDate() + 7);
+    const dayKey = (d) => `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`;
+    const todayKey = dayKey(now);
+
+    const fmtDay = (d) => d.toLocaleDateString("ko-KR", { month: "long", day: "numeric", weekday: "long" });
+    const fmtShort = (d) => d.toLocaleDateString("ko-KR", { month: "long", day: "numeric", weekday: "short" });
+    const fmtTime = (d) => d.toLocaleTimeString("ko-KR", { hour: "numeric", minute: "2-digit" });
+    const lastDay = new Date(weekEnd.getTime() - 1);
+    $("range").textContent = `${fmtShort(weekStart)} – ${fmtShort(lastDay)}`;
+
+    const records = load().records
+      .map((r) => ({ ...r, date: new Date(r.at) }))
+      .filter((r) => r.date >= weekStart && r.date < weekEnd)
+      .sort((a, b) => a.date - b.date);   // 먼저 해낸 것이 아래에 깔려요
+
+    // 조약돌 모양: 기록마다 정해진 모양이라, 다시 열어도 같은 조약돌이에요
+    const COLORS = ["#e09a6b", "#e8a87c", "#eeb48c", "#f2c4a0"];
+    function hash(str) {
+      let h = 2166136261;
+      for (const c of str) { h ^= c.codePointAt(0); h = Math.imul(h, 16777619); }
+      return h >>> 0;
+    }
+    function pebbleLook(id) {
+      const h = hash(id);
+      const pick = (n, shift) => (h >>> shift) % n;
+      const w = 34 + pick(14, 0);          // 34~47px
+      const ht = 22 + pick(8, 4);          // 22~29px
+      const rot = pick(25, 8) - 12;        // -12~12도
+      const color = COLORS[pick(COLORS.length, 13)];
+      const a = 44 + pick(14, 16), b = 40 + pick(16, 20);
+      return { w, ht, rot, color, radius: `${a}% ${100 - a}% ${b}% ${100 - b}% / ${55 + pick(10, 24)}% ${52 + pick(10, 26)}% ${45 - pick(8, 28)}% ${42 + pick(8, 29)}%` };
+    }
+
+    // 조약돌 쌓기
+    const pile = $("pile");
+    if (records.length === 0) {
+      pile.innerHTML = '<p class="pile-empty">작은 일 하나를 해내면<br>여기에 조약돌이 하나 놓여요.</p>';
+      $("count").textContent = "";
+    } else {
+      const totalDrop = Math.min(1400, records.length * 90);
+      records.forEach((r, i) => {
+        const look = pebbleLook(r.id);
+        const p = document.createElement("button");
+        p.type = "button";
+        p.className = "pebble drop";
+        p.style.width = look.w + "px";
+        p.style.height = look.ht + "px";
+        p.style.background = `radial-gradient(circle at 32% 30%, rgba(255,255,255,.45), transparent 45%), ${look.color}`;
+        p.style.borderRadius = look.radius;
+        p.style.setProperty("--rot", look.rot + "deg");
+        p.style.transform = `rotate(${look.rot}deg)`;
+        p.style.animationDelay = (records.length > 1 ? (i / (records.length - 1)) * totalDrop : 0) + "ms";
+        const label = `${fmtShort(r.date)} ${fmtTime(r.date)} · ${r.name}`;
+        p.setAttribute("aria-label", label);
+        p.addEventListener("click", () => {
+          document.querySelectorAll(".pebble.picked").forEach((x) => x.classList.remove("picked"));
+          p.classList.add("picked");
+          $("caption").textContent = label + (r.memo ? ` — ${r.memo}` : "");
+        });
+        pile.appendChild(p);
+      });
+      $("count").textContent = `이번 주에 조약돌 ${records.length}개가 쌓였어요.`;
+      $("caption").textContent = "조약돌을 누르면 무엇을 해냈는지 보여요.";
+    }
+
+    // 날마다 해낸 것: 해낸 것이 있는 날만 보여 줘요 (빈 날은 따로 표시하지 않아요)
+    const byDay = new Map();
+    for (const r of records) {
+      const k = dayKey(r.date);
+      if (!byDay.has(k)) byDay.set(k, { date: r.date, list: [] });
+      byDay.get(k).list.push(r);
+    }
+    const days = $("days");
+    if (byDay.size > 0) {
+      const h2 = document.createElement("h2");
+      h2.textContent = "이번 주에 내가 해낸 것";
+      days.appendChild(h2);
+    }
+    for (const [k, { date, list }] of byDay) {
+      const box = document.createElement("div");
+      box.className = "day";
+
+      const head = document.createElement("div");
+      head.className = "day-head";
+      const title = document.createElement("strong");
+      title.textContent = fmtDay(date);
+      head.appendChild(title);
+      if (k === todayKey) {
+        const t = document.createElement("span");
+        t.className = "today";
+        t.textContent = "오늘";
+        head.appendChild(t);
+      }
+      const mini = document.createElement("span");
+      mini.className = "mini";
+      mini.setAttribute("aria-hidden", "true");
+      for (const r of list) {
+        const s = document.createElement("span");
+        s.style.background = pebbleLook(r.id).color;
+        mini.appendChild(s);
+      }
+      head.appendChild(mini);
+      box.appendChild(head);
+
+      // 같은 일은 한 줄로 모아요
+      const groups = new Map();
+      for (const r of list) {
+        if (!groups.has(r.name)) groups.set(r.name, []);
+        groups.get(r.name).push(r);
+      }
+      const ul = document.createElement("ul");
+      for (const [name, rs] of groups) {
+        const li = document.createElement("li");
+        li.append(name);
+        if (rs.length > 1) {
+          const n = document.createElement("span");
+          n.className = "times";
+          n.textContent = ` ×${rs.length}`;
+          li.appendChild(n);
+        }
+        for (const r of rs) {
+          if (!r.memo) continue;
+          const m = document.createElement("span");
+          m.className = "memo";
+          m.textContent = r.memo;
+          li.appendChild(m);
+        }
+        ul.appendChild(li);
+      }
+      box.appendChild(ul);
+      days.appendChild(box);
+    }
+    // 이번 주에 지나간 날 중 기록이 없는 날이 있을 때만, 개수 없이 조용히 한마디
+    const passedDays = Math.floor((new Date(now.getFullYear(), now.getMonth(), now.getDate()) - weekStart) / 86400000) + 1;
+    if (byDay.size > 0 && byDay.size < passedDays) {
+      const note = document.createElement("p");
+      note.className = "quiet-note";
+      note.textContent = "쉬어 간 날도 이번 주의 일부예요.";
+      days.appendChild(note);
+    }
+  </script>
+</body>
+</html>

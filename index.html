@@ -58,6 +58,11 @@
       background: var(--accent-soft); color: var(--text);
       border-radius: 16px; text-decoration: none; font-size: 0.95rem;
     }
+    .look-link {
+      display: block; margin: 40px 0 0; padding: 14px 18px; text-align: center;
+      border: 1px solid var(--line); border-radius: 16px;
+      color: var(--soft); text-decoration: none; font-size: 0.95rem;
+    }
 
     /* 항목 목록 */
     .items { list-style: none; padding: 0; margin: 0 0 16px; display: grid; gap: 10px; }
@@ -188,6 +193,8 @@
 
     <h2 id="logTitle">오늘 내가 해낸 것</h2>
     <ul class="log" id="log"></ul>
+
+    <a class="look-link" href="lookback.html">이번 주 돌아보기 →</a>
   </main>
 
   <div class="toast" id="toast" role="status">
