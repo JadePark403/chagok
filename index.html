@@ -56,6 +56,7 @@
       color: var(--soft); text-decoration: none; font-size: 0.95rem;
     }
 
+    .people-link { margin-top: 10px; }
     .backup-link {
       display: block; width: fit-content; margin: 18px auto 0; padding: 6px 4px;
       color: var(--soft); font-size: 0.85rem;
@@ -111,6 +112,9 @@
     }
     .low-next a { color: var(--text); text-decoration: none; background: var(--accent-soft); border-radius: 999px; padding: 7px 14px; white-space: nowrap; }
     .low-next .end { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+    .low-person { margin-top: 14px; }
+    .low-person[hidden] { display: none; }
+    .low-person .ppl-hint { background: var(--card); }
     @media (prefers-reduced-motion: reduce) { .low { animation: none; } }
 
     /* 항목 목록 */
@@ -270,6 +274,7 @@
         <p class="low-hello" id="lowHello"></p>
         <div id="lowNote"></div>
         <div id="lowLie"></div>
+        <div class="low-person" id="lowPerson" hidden></div>
         <div class="low-next">
           <span>마음이 무거우면</span>
           <span class="end">
@@ -301,6 +306,7 @@
     <ul class="log" id="log"></ul>
 
     <a class="look-link" href="lookback.html">이번 주 돌아보기 →</a>
+    <a class="look-link people-link" href="people.html">털어놓을 수 있는 사람 →</a>
     <a class="backup-link" href="backup.html">내 기록 백업하기</a>
   </main>
 
@@ -318,6 +324,7 @@
 
   <script src="help.js"></script>
   <script src="record-sheet.js"></script>
+  <script src="people.js"></script>
   <script>
     // ── 저장소: 데이터는 이 브라우저 안(localStorage)에만 저장돼요 ──
     const KEY = "overcome.v1";
@@ -568,6 +575,8 @@
       const cards = readList(KIT_KEY).filter((c) => c && c.text);
       if (cards.length) { showNote(cards); showLie(false); }
       else { $("lowNote").innerHTML = ""; showLie(true); }
+      // 연락해 볼 사람 한 명 (목록이 비어 있으면 적어 둘 수 있다고만 살짝)
+      window.chagokPeople.suggest($("lowPerson"));
       $("low").hidden = false;
     }
 

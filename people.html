@@ -1,0 +1,249 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>털어놓을 수 있는 사람 · 차곡</title>
+  <!-- PWA: 폰 홈 화면에 설치하고, 인터넷이 끊겨도 열리게 -->
+  <link rel="manifest" href="manifest.webmanifest" />
+  <meta name="theme-color" content="#faf6f0" />
+  <link rel="icon" href="icon.svg" type="image/svg+xml" />
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-title" content="차곡" />
+  <script>
+    if ("serviceWorker" in navigator) {
+      addEventListener("load", () => navigator.serviceWorker.register("sw.js").catch(() => {}));
+    }
+  </script>
+  <link rel="stylesheet" href="theme.css" />
+  <style>
+    /* 색·글꼴은 theme.css에서 모든 화면이 함께 써요 */
+    main { max-width: 480px; margin: 0 auto; padding: 14px 18px 60px; }
+    .top {
+      display: flex; justify-content: space-between; align-items: center; min-height: 36px;
+      position: sticky; top: 0; z-index: 5; background: var(--bg);
+      margin: -14px -18px 0; padding: 10px 18px 6px;
+    }
+    .link { color: var(--soft); font-size: 0.9rem; text-decoration: none; padding: 6px 2px; }
+    .link:hover, .link:focus-visible { color: var(--text); }
+
+    h1 { font-size: 1.6rem; margin: 14px 0 2px; }
+    .sub { color: var(--soft); font-size: 0.92rem; margin: 0 0 20px; }
+
+    .people { list-style: none; padding: 0; margin: 0 0 16px; display: grid; gap: 10px; }
+    .person { background: var(--card); border-radius: var(--radius); padding: 12px 12px 12px 18px; display: flex; align-items: center; gap: 8px; }
+    .person.flash { animation: flash .9s ease; }
+    @keyframes flash { 0% { background: var(--peach); } 100% { background: var(--card); } }
+    .pwho {
+      flex: 1; min-width: 0; text-align: left; cursor: pointer; font: inherit; color: inherit;
+      border: none; background: none; padding: 4px 0;
+    }
+    .pwho .name { display: block; font-size: 1.08rem; }
+    .pwho .phone { display: block; color: var(--soft); font-size: 0.82rem; }
+    .pwho .phone.none { color: var(--faint); }
+    .pwho:focus-visible { outline: 2px solid var(--soft); outline-offset: 2px; border-radius: 8px; }
+    .acts { display: flex; gap: 6px; flex-shrink: 0; }
+    .act {
+      font: inherit; font-size: 0.9rem; text-decoration: none; white-space: nowrap;
+      border-radius: 999px; padding: 7px 13px; background: var(--bg); color: var(--text);
+    }
+    .act:active { background: var(--accent-soft); }
+
+    /* 고치는 중 */
+    .editor { background: var(--card); border-radius: var(--radius); padding: 12px; display: grid; gap: 8px; }
+    .editor .row { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin-top: 2px; }
+    .editor .row[hidden] { display: none; }
+    .editor .grow { margin-right: auto; }
+    .ask { width: 100%; margin: 0 0 2px; font-size: 0.92rem; }
+
+    .field {
+      display: block; width: 100%; min-width: 0; font: inherit; color: inherit;
+      padding: 12px 14px; border: 1.5px solid transparent; border-radius: 12px;
+      background: var(--bg); outline: none;
+    }
+    .field::placeholder { color: var(--faint); }
+    .field:focus { border-color: var(--accent); }
+
+    .btn {
+      font: inherit; font-size: 0.95rem; cursor: pointer; border-radius: 12px; padding: 9px 15px;
+      border: none; background: var(--bg); color: var(--text); white-space: nowrap;
+    }
+    .btn.main { background: var(--accent); color: #fff; }
+    .btn.quiet { background: none; color: var(--soft); }
+    .text-link {
+      font: inherit; font-size: 0.88rem; cursor: pointer; border: none; background: none;
+      color: var(--soft); padding: 8px 2px; text-decoration: underline; text-underline-offset: 3px;
+    }
+
+    .empty { color: var(--soft); text-align: center; padding: 22px 10px; font-size: 0.95rem; }
+
+    .add-title { font-size: 1.05rem; margin: 30px 0 4px; }
+    .add-sub { color: var(--soft); font-size: 0.88rem; margin: 0 0 10px; }
+    .add { display: grid; gap: 8px; }
+    .add .field { background: var(--card); }
+    .add .field:focus { background: var(--bg); }
+    .add button {
+      font: inherit; border: none; border-radius: 14px; padding: 13px 18px;
+      background: var(--accent); color: #fff; cursor: pointer; white-space: nowrap;
+    }
+    .whisper { color: var(--accent-deep); font-size: 0.88rem; min-height: 1.5em; margin: 8px 2px 0; }
+    .note { color: var(--soft); font-size: 0.82rem; margin: 22px 2px 0; border-top: 1px solid var(--line); padding-top: 12px; }
+    .note p { margin: 0 0 6px; }
+
+    @media (prefers-reduced-motion: reduce) { .person.flash { animation: none; } }
+  </style>
+</head>
+<body>
+  <main>
+    <div class="top">
+      <a class="link" href="index.html">← 오늘 해낸 일</a>
+      <span data-help-slot></span>
+    </div>
+
+    <h1>털어놓을 수 있는 사람</h1>
+    <p class="sub">힘들 때 떠올릴 수 있는 사람을 적어 두세요. 한 명이어도 충분해요.</p>
+
+    <ul class="people" id="people"></ul>
+
+    <h2 class="add-title">한 사람 적어 두기</h2>
+    <p class="add-sub">이름이나 별명만 적어도 괜찮아요. 번호는 넣고 싶을 때만.</p>
+    <form class="add" id="addForm" autocomplete="off">
+      <input class="field" id="addName" maxlength="30" placeholder="이름 또는 별명 (예: 언니, 민지)" />
+      <input class="field" id="addPhone" type="tel" inputmode="tel" maxlength="20" placeholder="전화번호 (선택)" />
+      <button type="submit">적어 두기</button>
+    </form>
+    <p class="whisper" id="whisper" role="status"></p>
+
+    <div class="note">
+      <p>이 목록은 이 기기 안에만 있어요.</p>
+      <p>차곡은 누구에게도 대신 연락하거나, 내가 쓴 글을 보내지 않아요. 전화·문자를 누르면 폰의 전화·문자 앱이 열릴 뿐이에요.</p>
+    </div>
+  </main>
+
+  <script src="help.js"></script>
+  <script src="people.js"></script>
+  <script>
+    const $ = (id) => document.getElementById(id);
+    const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+    const P = window.chagokPeople;
+
+    let list = P.load();
+    let editingId = null;
+    let whisperTimer = null;
+    const save = () => P.save(list);
+
+    function whisper(text) {
+      $("whisper").textContent = text;
+      clearTimeout(whisperTimer);
+      whisperTimer = setTimeout(() => { $("whisper").textContent = ""; }, 3500);
+    }
+
+    function render(flashId) {
+      const ul = $("people");
+      ul.innerHTML = "";
+      if (list.length === 0) {
+        ul.innerHTML = '<li class="empty">아직 비어 있어요.<br>떠오르는 사람이 있다면 아래에 적어 두세요.</li>';
+      }
+      for (const p of list) {
+        const li = document.createElement("li");
+        if (p.id === editingId) { li.appendChild(editor(p)); ul.appendChild(li); continue; }
+        li.className = "person" + (p.id === flashId ? " flash" : "");
+
+        const who = document.createElement("button");
+        who.type = "button";
+        who.className = "pwho";
+        who.setAttribute("aria-label", p.name + " 고치기");
+        const n = document.createElement("span");
+        n.className = "name";
+        n.textContent = p.name;
+        const ph = document.createElement("span");
+        ph.className = "phone" + (p.phone ? "" : " none");
+        ph.textContent = p.phone || "탭해서 고치기";
+        who.append(n, ph);
+        who.addEventListener("click", () => { editingId = p.id; render(); focusEditor(); });
+
+        const acts = document.createElement("span");
+        acts.className = "acts";
+        P.contactLinks(p).forEach((a) => { a.className = "act"; acts.appendChild(a); });
+
+        li.append(who, acts);
+        ul.appendChild(li);
+      }
+    }
+
+    function editor(p) {
+      const box = document.createElement("div");
+      box.className = "editor";
+      box.innerHTML = `
+        <input class="field" data-f="name" maxlength="30" autocomplete="off" aria-label="이름 또는 별명" placeholder="이름 또는 별명" />
+        <input class="field" data-f="phone" type="tel" inputmode="tel" maxlength="20" autocomplete="off" aria-label="전화번호 (선택)" placeholder="전화번호 (선택)" />
+        <div class="row main-row">
+          <button class="text-link grow" type="button" data-act="ask">목록에서 빼기</button>
+          <button class="btn quiet" type="button" data-act="cancel">그대로 두기</button>
+          <button class="btn main" type="button" data-act="save">고쳐 두기</button>
+        </div>
+        <div class="row confirm-row" hidden>
+          <p class="ask">${"이 사람을 목록에서 뺄까요?"}</p>
+          <button class="btn quiet grow" type="button" data-act="keep">그대로 둘래요</button>
+          <button class="btn" type="button" data-act="remove">빼기</button>
+        </div>`;
+      const name = box.querySelector('[data-f="name"]'), phone = box.querySelector('[data-f="phone"]');
+      name.value = p.name;
+      phone.value = p.phone || "";
+      const mainRow = box.querySelector(".main-row"), confirmRow = box.querySelector(".confirm-row");
+      const showConfirm = (on) => { mainRow.hidden = on; confirmRow.hidden = !on; name.disabled = phone.disabled = on; };
+      const done = (flash) => { editingId = null; render(flash); };
+      const saveEdit = () => {
+        const nv = name.value.trim(), pv = phone.value.trim();
+        if (!nv) { showConfirm(true); return; }   // 이름을 다 지우면 뺄지 물어봐요
+        p.name = nv;
+        if (pv) p.phone = pv; else delete p.phone;
+        save();
+        done(p.id);
+      };
+      box.addEventListener("click", (e) => {
+        const act = e.target.dataset && e.target.dataset.act;
+        if (act === "save") saveEdit();
+        else if (act === "cancel") done();
+        else if (act === "ask") showConfirm(true);
+        else if (act === "keep") { showConfirm(false); if (!name.value.trim()) name.value = p.name; name.focus(); }
+        else if (act === "remove") {
+          list = list.filter((x) => x.id !== p.id);
+          save();
+          done();
+          whisper("목록에서 뺐어요.");
+        }
+      });
+      [name, phone].forEach((el) => el.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") { e.preventDefault(); saveEdit(); }
+        if (e.key === "Escape") done();
+      }));
+      return box;
+    }
+    function focusEditor() {
+      const el = document.querySelector('.editor [data-f="name"]');
+      if (el) { el.focus(); el.setSelectionRange(el.value.length, el.value.length); }
+    }
+
+    $("addForm").addEventListener("submit", (e) => {
+      e.preventDefault();
+      const name = $("addName").value.trim();
+      const phone = $("addPhone").value.trim();
+      if (!name) { $("addName").focus(); return; }
+      const p = { id: uid(), name, at: new Date().toISOString() };
+      if (phone) p.phone = phone;
+      list.push(p);
+      save();
+      $("addName").value = "";
+      $("addPhone").value = "";
+      editingId = null;
+      render(p.id);
+      whisper("적어 뒀어요. 떠올릴 사람이 있다는 것도 힘이 돼요.");
+    });
+
+    render();
+  </script>
+</body>
+</html>

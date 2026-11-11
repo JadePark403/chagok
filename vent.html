@@ -105,6 +105,10 @@
     .kept .ask { color: var(--soft); font-size: 0.85rem; margin-right: auto; }
     .btn.small { padding: 7px 12px; font-size: 0.88rem; border-radius: 12px; }
 
+    /* 털어놓기를 마친 뒤, 연락해 볼 사람 한 명 */
+    .people-hint { margin-top: 12px; animation: fadeIn .6s ease; }
+    .people-hint[hidden] { display: none; }
+
     @media (prefers-reduced-motion: reduce) {
       .fade-in { animation: none; }
     }
@@ -134,6 +138,7 @@
       <button class="btn" id="releaseBtn" type="button">흘려보내기</button>
       <button class="btn main" id="keepBtn" type="button">간직하기</button>
     </div>
+    <div class="people-hint" id="peopleHint" hidden></div>
   </main>
 
   <!-- 간직한 글 -->
@@ -150,6 +155,7 @@
   <div class="whisper" id="whisper" role="status"></div>
 
   <script src="help.js"></script>
+  <script src="people.js"></script>
   <script>
     // ── 간직한 글은 이 브라우저 안(localStorage)에만 저장돼요. 흘려보낸 글은 어디에도 남지 않아요. ──
     const KEY = "overcome.vent.v1";
@@ -181,6 +187,13 @@
     }
     const DID_IT = "털어놓은 것도 해낸 거예요.";
 
+    // 털어놓기를 마친 뒤: 목록에 사람이 있으면 한 명만 조용히 (내용은 아무에게도 가지 않아요)
+    function offerPerson() {
+      if (text.value.trim()) return;   // 벌써 다시 쓰기 시작했다면 방해하지 않아요
+      window.chagokPeople.suggest($("peopleHint"), { quietWhenEmpty: true, onClose: hidePerson });
+    }
+    function hidePerson() { $("peopleHint").hidden = true; $("peopleHint").innerHTML = ""; }
+
     const text = $("text");
 
     // 글이 있을 때만 "다 썼어요"가 조용히 나타나요
@@ -190,7 +203,7 @@
       if (has && $("doneRow").hidden) { $("doneRow").hidden = false; $("doneRow").classList.add("fade-in"); }
       if (!has) $("doneRow").hidden = true;
     }
-    text.addEventListener("input", updateButtons);
+    text.addEventListener("input", () => { updateButtons(); if (text.value.trim()) hidePerson(); });
 
     $("doneBtn").addEventListener("click", () => {
       $("doneRow").hidden = true;
@@ -233,6 +246,7 @@
         .then(() => { resetWriting(); text.getAnimations().forEach((a) => a.cancel()); });
       await whisper("간직했어요. 나만 볼 수 있어요.");
       await whisper(DID_IT, 1600);
+      offerPerson();
       text.focus();
     });
 
@@ -286,6 +300,7 @@
       resetWriting();
       await whisper("흘려보냈어요.");
       await whisper(DID_IT, 1600);
+      offerPerson();
       text.focus();
     });
 
