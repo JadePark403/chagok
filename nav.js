@@ -18,3 +18,16 @@
     }
   });
 })();
+
+// 뒤로 돌아와 폰이 기억해 둔 화면이 살아날 때(pageshow): 위쪽 고정 줄을 확실히 다시 그려요.
+// (아이폰이 살린 화면에서 위쪽 줄이 잠깐 빠져 보이는 일을 막으려고)
+addEventListener("pageshow", (e) => {
+  if (!e.persisted) return;
+  document.querySelectorAll(".fixed-bar").forEach((bar) => {
+    bar.style.transform = "translateZ(0) translateY(0.01px)";   // 살짝 바꿔서 새로 그리게 하고
+    void bar.offsetHeight;                                       // 지금 바로 다시 계산한 다음
+    const reset = () => { bar.style.transform = ""; };
+    requestAnimationFrame(reset);                                // 다음 장면에서 원래대로
+    setTimeout(reset, 100);                                      // (화면이 그려지지 않을 때도 원래대로)
+  });
+});

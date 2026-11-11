@@ -41,6 +41,22 @@
 
 * { box-sizing: border-box; }
 
+/* 화면 위쪽에 붙어 있는 줄(← 돌아가기 · 도움받을 곳)
+   position: fixed로 화면 위에 고정해요. (sticky는 아이폰에서 뒤로 돌아올 때 잠깐 사라지는 일이 있어서)
+   --bar-h: 줄의 높이, --page-w: 화면 내용의 최대 너비 (줄 안의 글자를 내용과 같은 선에 맞추려고) */
+:root { --bar-h: 54px; --page-w: 480px; }
+.fixed-bar {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 20;
+  background: var(--bg);
+  height: calc(var(--bar-h) + env(safe-area-inset-top));
+  padding-top: env(safe-area-inset-top);   /* 아이폰 상태 표시줄 밑으로 들어가지 않게 */
+  padding-left: max(18px, calc(50% - var(--page-w) / 2 + 18px), env(safe-area-inset-left));
+  padding-right: max(18px, calc(50% - var(--page-w) / 2 + 18px), env(safe-area-inset-right));
+  transform: translateZ(0);                /* 따로 그려 두어서, 다시 그릴 때 빠지지 않게 */
+}
+/* 고정된 줄만큼 내용 위쪽에 여백 (입력칸으로 스크롤될 때도 줄 밑에 가려지지 않게) */
+html { scroll-padding-top: calc(var(--bar-h) + env(safe-area-inset-top) + 8px); }
+
 body {
   margin: 0;
   background: var(--bg);

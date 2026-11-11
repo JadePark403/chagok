@@ -22,11 +22,10 @@
   <link rel="stylesheet" href="theme.css" />
   <style>
     /* 색·글꼴은 theme.css에서 모든 화면이 함께 써요 */
-    main { max-width: 480px; margin: 0 auto; padding: 14px 18px 60px; }
+    main { max-width: 480px; margin: 0 auto; padding: calc(var(--bar-h) + env(safe-area-inset-top)) 18px 60px; }
     .top {
       display: flex; justify-content: space-between; align-items: center; min-height: 36px;
-      position: sticky; top: 0; z-index: 5; background: var(--bg);
-      margin: -14px -18px 0; padding: 10px 18px 6px;
+      /* 화면 위에 고정 (theme.css의 .fixed-bar) */
     }
     .link { color: var(--soft); font-size: 0.9rem; text-decoration: none; padding: 6px 2px; }
     .link:hover, .link:focus-visible { color: var(--text); }
@@ -99,7 +98,7 @@
 </head>
 <body>
   <main>
-    <div class="top">
+    <div class="top fixed-bar">
       <a class="link" href="index.html" data-back>← 오늘 해낸 일</a>
       <span data-help-slot></span>
     </div>

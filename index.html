@@ -32,15 +32,14 @@
     main {
       max-width: 480px;
       margin: 0 auto;
-      padding: 28px 18px 120px;
+      padding: calc(var(--bar-h) + env(safe-area-inset-top)) 18px 120px;
     }
+    :root { --bar-h: 69px; }
     h1 { font-size: 1.6rem; margin: 0 0 4px; }
-    /* 위쪽 줄은 스크롤해도 붙어 있어서, "도움받을 곳"이 언제나 한 번에 닿아요 */
+    /* 위쪽 줄은 화면 위에 고정돼 있어서, "도움받을 곳"이 언제나 한 번에 닿아요 (theme.css의 .fixed-bar) */
     .head {
       display: flex; justify-content: space-between; align-items: center; gap: 12px;
-      position: sticky; top: 0; z-index: 5;
-      background: var(--bg);
-      margin: -28px -18px 4px; padding: 20px 18px 8px;
+      padding-bottom: 8px; padding-top: calc(env(safe-area-inset-top) + 20px);
     }
     .head h1 { margin: 0; }
     .sub { color: var(--soft); margin: 0 0 12px; font-size: 0.95rem; }
@@ -285,7 +284,7 @@
     <div class="name">차곡</div>
   </div>
   <main>
-    <div class="head">
+    <div class="head fixed-bar">
       <h1>오늘 해낸 일</h1>
       <span data-help-slot></span>
     </div>
@@ -354,6 +353,7 @@
   <script src="record-sheet.js"></script>
   <script src="people.js"></script>
   <script src="mood.js"></script>
+  <script src="nav.js"></script>
   <script>
     // ── 저장소: 데이터는 이 브라우저 안(localStorage)에만 저장돼요 ──
     const KEY = "overcome.v1";
