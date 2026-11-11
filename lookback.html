@@ -56,6 +56,16 @@
     }
     .pebble:active { transform: translateY(-3px) rotate(var(--rot)) !important; }
     .pebble:focus-visible { outline: 2px solid var(--soft); outline-offset: 2px; }
+    /* 털어놓은 조약돌: 반투명해서 해낸 일 조약돌과 살짝 달라 보여요 */
+    .pebble.vent {
+      box-shadow:
+        inset 0 0 0 1.5px rgba(224, 154, 107, 0.45),
+        inset 4px 5px 8px rgba(255, 255, 255, 0.35),
+        0 2px 3px rgba(150, 95, 60, 0.06);
+    }
+    .mini span.vent { box-shadow: inset 0 0 0 1px rgba(224, 154, 107, 0.5); }
+    .day li.vent { cursor: default; color: var(--soft); }
+    .day li.vent:active { background: none; }
     .pebble.drop { animation: drop .55s cubic-bezier(.3, 1.4, .5, 1) both; }
     @keyframes drop {
       from { opacity: 0; transform: translateY(-40px) rotate(var(--rot)); }
@@ -124,6 +134,20 @@
       } catch (e) {}
       return { items: [], records: [] };
     }
+    // 털어놓기를 마친 시간들 (vent.html이 남겨요. 글 내용은 없어요)
+    const VENTED_KEY = "chagok.vented.v1";
+    function loadVented() {
+      try {
+        const list = JSON.parse(localStorage.getItem(VENTED_KEY));
+        if (Array.isArray(list)) return list.filter((v) => v && typeof v.at === "string");
+      } catch (e) {}
+      return [];
+    }
+    const VENT_NAME = "털어놓았어요";
+    const ventColor = (c) => {   // "#e8a87c" → 반투명
+      const n = parseInt(c.slice(1), 16);
+      return `rgba(${n >> 16}, ${(n >> 8) & 255}, ${n & 255}, 0.4)`;
+    };
 
     // 이번 주: 월요일 0시부터 다음 주 월요일 0시 전까지 (내 기기 시간 기준)
     const now = new Date();
@@ -169,6 +193,7 @@
 
     function render(animate) {
       const records = load().records
+        .concat(loadVented().map((v) => ({ id: v.id, at: v.at, name: VENT_NAME, vent: true })))
         .map((r) => ({ ...r, date: new Date(r.at) }))
         .filter((r) => r.date >= weekStart && r.date < weekEnd)
         .sort((a, b) => a.date - b.date);   // 먼저 해낸 것이 아래에 깔려요
@@ -186,19 +211,24 @@
           const look = pebbleLook(r.id);
           const p = document.createElement("button");
           p.type = "button";
-          p.className = "pebble" + (animate ? " drop" : "");
+          p.className = "pebble" + (r.vent ? " vent" : "") + (animate ? " drop" : "");
           p.style.width = look.w + "px";
           p.style.height = look.ht + "px";
-          p.style.background = `radial-gradient(circle at 32% 30%, rgba(255,255,255,.45), transparent 45%), ${look.color}`;
+          p.style.background = `radial-gradient(circle at 32% 30%, rgba(255,255,255,.45), transparent 45%), ${r.vent ? ventColor(look.color) : look.color}`;
           p.style.borderRadius = look.radius;
           p.style.setProperty("--rot", look.rot + "deg");
           p.style.transform = `rotate(${look.rot}deg)`;
           if (animate) p.style.animationDelay = (records.length > 1 ? (i / (records.length - 1)) * totalDrop : 0) + "ms";
           p.setAttribute("aria-label", `${fmtShort(r.date)} ${fmtTime(r.date)} · ${r.name}`);
-          p.addEventListener("click", () => openSheet(r.id));
+          // 털어놓은 조약돌은 고칠 것이 없어서, 언제였는지만 조용히 알려 줘요
+          p.addEventListener("click", () => r.vent
+            ? ($("caption").textContent = `${fmtShort(r.date)} ${fmtTime(r.date)} · 털어놓았어요. 그것도 해낸 거예요.`)
+            : openSheet(r.id));
           pile.appendChild(p);
         });
-        $("count").textContent = `이번 주에 조약돌 ${records.length}개가 쌓였어요.`;
+        const vents = records.filter((r) => r.vent).length;
+        $("count").textContent = `이번 주에 조약돌 ${records.length}개가 쌓였어요.` +
+          (vents ? ` 그중 ${vents}개는 털어놓은 조약돌이에요.` : "");
         $("caption").textContent = "조약돌을 누르면 그 기록을 보고 고칠 수 있어요.";
       }
 
@@ -236,7 +266,9 @@
         mini.setAttribute("aria-hidden", "true");
         for (const r of list) {
           const s = document.createElement("span");
-          s.style.background = pebbleLook(r.id).color;
+          const c = pebbleLook(r.id).color;
+          s.style.background = r.vent ? ventColor(c) : c;
+          if (r.vent) s.className = "vent";
           mini.appendChild(s);
         }
         head.appendChild(mini);
@@ -250,12 +282,16 @@
           t.textContent = fmtTime(r.date);
           const s = document.createElement("span");
           s.textContent = r.name;
-          const m = document.createElement("span");
-          m.className = "memo" + (r.memo ? "" : " hint");
-          m.textContent = r.memo || "탭해서 한 줄 남기기";
-          s.appendChild(m);
+          if (r.vent) {
+            li.className = "vent";   // 털어놓은 기록은 이름과 시간뿐이에요
+          } else {
+            const m = document.createElement("span");
+            m.className = "memo" + (r.memo ? "" : " hint");
+            m.textContent = r.memo || "탭해서 한 줄 남기기";
+            s.appendChild(m);
+            tappable(li, r.id);
+          }
           li.append(t, s);
-          tappable(li, r.id);
           ul.appendChild(li);
         }
         box.appendChild(ul);

@@ -2,7 +2,7 @@
 // 내 기록(글, 해낸 일)은 여기서 다루지 않아요. 기록은 늘 브라우저 저장소에만 있어요.
 //
 // 앱 파일을 새로 추가하면 FILES에도 적어 주고, VERSION 숫자를 하나 올려 주세요.
-const VERSION = "chagok-v6";
+const VERSION = "chagok-v7";
 const FILES = [
   "./",
   "./index.html",

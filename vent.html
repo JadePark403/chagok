@@ -168,6 +168,19 @@
     }
     const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
 
+    // ── 털어놓은 것도 해낸 일: 마친 시간만 남겨요 (글 내용은 절대 담지 않아요) ──
+    // 돌아보기에 반투명 조약돌로 쌓여요. 모양: [{ id, at }]
+    const VENTED_KEY = "chagok.vented.v1";
+    function markVented() {
+      try {
+        let list = JSON.parse(localStorage.getItem(VENTED_KEY));
+        if (!Array.isArray(list)) list = [];
+        list.push({ id: uid(), at: new Date().toISOString() });
+        localStorage.setItem(VENTED_KEY, JSON.stringify(list));
+      } catch (e) {}
+    }
+    const DID_IT = "털어놓은 것도 해낸 거예요.";
+
     const text = $("text");
 
     // 글이 있을 때만 "다 썼어요"가 조용히 나타나요
@@ -213,11 +226,13 @@
       const list = loadKept();
       list.unshift({ id: uid(), text: body, at: new Date().toISOString() });
       if (!saveKept(list)) { alert("지금은 저장하지 못했어요. 브라우저 저장 공간을 확인해 주세요."); return; }
+      markVented();
       $("chooseRow").hidden = true;
       text.readOnly = true;
       text.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 600, fill: "forwards" }).finished
         .then(() => { resetWriting(); text.getAnimations().forEach((a) => a.cancel()); });
       await whisper("간직했어요. 나만 볼 수 있어요.");
+      await whisper(DID_IT, 1600);
       text.focus();
     });
 
@@ -266,9 +281,11 @@
       text.readOnly = true;
       const str = text.value;
       text.value = "";                 // 글은 바로 비워요. 저장은 처음부터 하지 않아요.
+      markVented();                    // 남는 건 "털어놓았다"와 시간뿐이에요
       await scatterText(str, $("scatter"), text);
       resetWriting();
       await whisper("흘려보냈어요.");
+      await whisper(DID_IT, 1600);
       text.focus();
     });
 

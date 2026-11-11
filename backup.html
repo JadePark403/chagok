@@ -118,17 +118,19 @@
       done: "overcome.v1",       // 해낸 일: { items, records }
       vent: "overcome.vent.v1",  // 간직한 글: [{ id, text, at }]
       kit: "chagok.kit.v1",      // 구급상자 쪽지: [{ id, text, at }]
+      vented: "chagok.vented.v1", // 털어놓은 조약돌: [{ id, at }] (글 내용 없음)
     };
 
     function readKey(key) {
       try { return JSON.parse(localStorage.getItem(key)); } catch (e) { return null; }
     }
     function current() {
-      return { done: readKey(KEYS.done), vent: readKey(KEYS.vent), kit: readKey(KEYS.kit) };
+      return { done: readKey(KEYS.done), vent: readKey(KEYS.vent), kit: readKey(KEYS.kit), vented: readKey(KEYS.vented) };
     }
 
     // 모양이 맞는지 확인: 이상한 파일이 기록을 망가뜨리지 않게
     const isEntryList = (v) => Array.isArray(v) && v.every((x) => x && typeof x.id === "string" && typeof x.text === "string");
+    const isTimeList = (v) => Array.isArray(v) && v.every((x) => x && typeof x.id === "string" && typeof x.at === "string");
     const isDone = (v) => v && Array.isArray(v.items) && Array.isArray(v.records) &&
       v.items.every((x) => x && typeof x.id === "string" && typeof x.name === "string") &&
       v.records.every((x) => x && typeof x.id === "string" && typeof x.at === "string");
@@ -136,14 +138,16 @@
       return data && typeof data === "object" &&
         (data.done == null || isDone(data.done)) &&
         (data.vent == null || isEntryList(data.vent)) &&
-        (data.kit == null || isEntryList(data.kit));
+        (data.kit == null || isEntryList(data.kit)) &&
+        (data.vented == null || isTimeList(data.vented));
     }
 
     function summary(d) {
       const n = (d.done && d.done.records ? d.done.records.length : 0);
       const v = (d.vent ? d.vent.length : 0);
       const k = (d.kit ? d.kit.length : 0);
-      return { n, v, k, text: `해낸 일 기록 ${n}개 · 간직한 글 ${v}개 · 구급상자 쪽지 ${k}장` };
+      const t = (d.vented ? d.vented.length : 0);
+      return { n, v, k, t, text: `해낸 일 기록 ${n}개 · 털어놓은 조약돌 ${t}개 · 간직한 글 ${v}개 · 구급상자 쪽지 ${k}장` };
     }
     const fmtDate = (iso) => new Date(iso).toLocaleDateString("ko-KR", { year: "numeric", month: "long", day: "numeric" });
 
