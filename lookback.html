@@ -60,12 +60,12 @@
        겹친 뒤쪽 돌이 비쳐 지저분해지지 않게, 바탕은 옅은 색으로 채우고 빛만 비치게 해요 */
     .pebble.vent {
       box-shadow:
-        inset 0 0 0 1.5px rgba(255, 255, 255, 0.55),
+        inset 0 0 4px 1px rgba(255, 255, 255, 0.45),   /* 가장자리 흰 빛: 선이 아니라 번지듯 부드럽게 */
         inset -4px -6px 10px rgba(214, 140, 96, 0.16),
         inset 3px 4px 10px rgba(255, 255, 255, 0.7),
         0 2px 5px rgba(150, 95, 60, 0.08);
     }
-    .mini span.vent { box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.6); }
+    .mini span.vent { box-shadow: inset 0 0 2px 0.5px rgba(255, 255, 255, 0.55); }
     .day li.vent { cursor: default; color: var(--soft); }
     .day li.vent:active { background: none; }
     .pebble.drop { animation: drop .55s cubic-bezier(.3, 1.4, .5, 1) both; }
