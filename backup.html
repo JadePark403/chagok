@@ -75,7 +75,7 @@
     </div>
 
     <h1>기록 백업</h1>
-    <p class="sub">내 기록을 파일 하나로 내 폰에 저장해 두고, 필요할 때 다시 불러올 수 있어요.</p>
+    <p class="sub">내 기록을 파일 하나로 저장하고, 다시 불러올 수 있어요.</p>
 
     <section class="box">
       <h2>파일로 저장하기</h2>
@@ -86,7 +86,6 @@
 
     <section class="box">
       <h2>파일에서 불러오기</h2>
-      <p>예전에 저장해 둔 차곡 백업 파일을 골라 주세요.</p>
       <input class="file" id="fileInput" type="file" tabindex="-1" aria-hidden="true" />
       <button class="btn soft" id="pickBtn" type="button">백업 파일 고르기</button>
 
@@ -105,8 +104,8 @@
 
     <div class="note">
       <p>백업 파일은 이 폰 안에서만 만들어지고, 어디로도 보내지지 않아요.</p>
-      <p>파일 안의 글은 잠겨 있지 않아요. 간직한 글도 들어 있으니, 믿을 수 있는 곳에만 보관해 주세요.</p>
-      <p>폰을 바꾸거나 브라우저 저장소가 지워질 때를 위해, 가끔 한 번씩 저장해 두면 마음이 놓여요.</p>
+      <p>파일은 잠겨 있지 않아요. 간직한 글도 들어 있으니 믿을 수 있는 곳에 두세요.</p>
+      <p>폰을 바꾸거나 기록이 지워졌을 때 쓸 수 있어요.</p>
     </div>
   </main>
 
@@ -184,7 +183,7 @@
           await navigator.share({ files: [file] });
           msgEl.textContent = "저장할 곳을 골랐다면, 백업이 끝났어요.";
         } catch (e) {
-          if (e && e.name === "AbortError") msgEl.textContent = "저장하지 않고 닫았어요. 괜찮아요.";
+          if (e && e.name === "AbortError") msgEl.textContent = "저장하지 않고 닫았어요.";
           else downloadFile(file, msgEl);
         }
         return;
@@ -217,7 +216,7 @@
       let parsed = null;
       try { parsed = JSON.parse(await f.text()); } catch (e) {}
       if (!parsed || parsed.app !== "chagok" || !valid(parsed.data)) {
-        $("loadMsg").textContent = "차곡 백업 파일이 아닌 것 같아요. 다른 파일을 골라 주세요.";
+        $("loadMsg").textContent = "차곡 백업 파일이 아닌 것 같아요.";
         return;
       }
       pending = parsed;
@@ -263,7 +262,7 @@
       }
       hideAsk();
       showNow();
-      $("loadMsg").textContent = "다시 불러왔어요. 예전의 내가 쌓은 것들이 돌아왔어요.";
+      $("loadMsg").textContent = "불러왔어요. 쌓아 둔 기록이 돌아왔어요.";
     });
 
     showNow();

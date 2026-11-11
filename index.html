@@ -358,10 +358,10 @@
       </div>
     </section>
 
-    <p class="sub">해낸 일을 탭하면 기록돼요. 작은 것도 충분해요.</p>
+    <p class="sub">해낸 일을 탭하면 기록돼요.</p>
     <div class="quick">
-      <a class="vent-link" href="vent.html">털어놓고 싶을 땐<br>여기로 →</a>
-      <a class="vent-link kit-link" href="kit.html">힘들 땐<br>나의 구급상자 →</a>
+      <a class="vent-link" href="vent.html">털어놓기 →</a>
+      <a class="vent-link kit-link" href="kit.html">나의 구급상자 →</a>
     </div>
 
     <ul class="items" id="items"></ul>
@@ -436,7 +436,7 @@
       list.parentElement.classList.toggle("editing", editing);
 
       if (state.items.length === 0) {
-        list.innerHTML = '<li class="empty">아래에 내가 해내고 싶은 작은 일을 적어 보세요.</li>';
+        list.innerHTML = '<li class="empty">자주 하는 작은 일을 아래에 적어 두세요.</li>';
       }
 
       state.items.forEach((item) => {
@@ -592,8 +592,8 @@
     const MOODS = window.chagokMood.MOODS;   // 날씨 그림은 mood.js에 있어요 (돌아보기와 함께 써요)
     const KIT_KEY = "chagok.kit.v1";
     const LOW_HELLO = {
-      2: "흐린 날이네요. 오늘은 천천히 가도 괜찮아요.",
-      1: "오늘은 그냥 누워 있어도 괜찮아요. 쉬는 것도 나를 돌보는 일이에요.",
+      2: "천천히 가도 괜찮아요.",
+      1: "오늘은 누워 있어도 괜찮아요.",
     };
     const MOVES = ["창문 열기", "세수하기", "집 앞 5분 걷기", "물 한 컵 마시기", "이불 정리하기", "양치하기", "햇빛 드는 곳에 잠깐 서 있기"];
     const LIE_DOWN = ["숨 세 번 천천히 쉬기", "물 한 모금 마시기", "창밖 잠깐 보기", "이불 속에서 기지개 켜기", "좋아하는 노래 한 곡 듣기"];
@@ -638,7 +638,7 @@
       } else {
         $("low").hidden = true;
         clearLow();
-        $("moodNote").textContent = "오늘의 기분을 남겨 뒀어요.";
+        $("moodNote").textContent = "남겨 뒀어요.";
         noteTimer = setTimeout(() => { $("moodNote").textContent = ""; }, 3000);
       }
     }
@@ -757,7 +757,7 @@
       box.innerHTML = `
         <div class="rest-done" role="status">
           <p>오늘은 쉬어 가기로 했어요.</p>
-          <small>돌아보기에 조약돌 하나를 조용히 놓아 뒀어요.</small>
+          <small>조약돌 하나를 놓아 뒀어요.</small>
           <button class="low-btn" type="button">되돌리기</button>
         </div>`;
       box.querySelector("button").addEventListener("click", () => {
@@ -782,7 +782,7 @@
         add("from", "과거의 내가 해낸 것");
         add("fact", `지금까지 쌓인 조약돌 ${total}개`);
         const lastDone = [...records].sort((a, b) => new Date(a.at) - new Date(b.at)).pop();
-        if (lastDone) add("sub-fact", `가장 최근에 해낸 일: ${lastDone.name} · ${fmt(lastDone.at)}`);
+        if (lastDone) add("sub-fact", `최근에 해낸 일: ${lastDone.name} · ${fmt(lastDone.at)}`);
       } else {
         const cards = kitCards();
         if (!cards.length) return;   // 보여 줄 사실이 없으면 비워 둬요
@@ -803,7 +803,7 @@
         box.querySelector("button").addEventListener("click", () => { showLie(true); saveLow({ lieOpen: true }); });
         return;
       }
-      box.innerHTML = '<p class="low-sub">누워서도 할 수 있는 일. 하고 싶을 때만요.</p><ul class="lie-list"></ul>';
+      box.innerHTML = '<p class="low-sub">하고 싶을 때만요.</p><ul class="lie-list"></ul>';
       const ul = box.querySelector("ul");
       for (const name of LIE_DOWN) {
         const li = document.createElement("li");

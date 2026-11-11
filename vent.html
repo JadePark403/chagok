@@ -150,7 +150,7 @@
       <span data-help-slot></span>
     </div>
     <h1>간직한 글</h1>
-    <p class="sub">이 기기 안에만 있어요. 나만 볼 수 있어요.</p>
+    <p class="sub">나만 볼 수 있어요.</p>
     <ul id="keptList"></ul>
   </main>
 
@@ -241,13 +241,13 @@
       if (!body.trim()) return;
       const list = loadKept();
       list.unshift({ id: uid(), text: body, at: new Date().toISOString() });
-      if (!saveKept(list)) { alert("지금은 저장하지 못했어요. 브라우저 저장 공간을 확인해 주세요."); return; }
+      if (!saveKept(list)) { alert("지금은 저장하지 못했어요. 쓴 글은 그대로 있어요."); return; }
       markVented();
       $("chooseRow").hidden = true;
       text.readOnly = true;
       text.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 600, fill: "forwards" }).finished
         .then(() => { resetWriting(); text.getAnimations().forEach((a) => a.cancel()); });
-      await whisper("간직했어요. 나만 볼 수 있어요.");
+      await whisper("간직했어요.");
       await whisper(DID_IT, 1600);
       offerPerson();
       text.focus();

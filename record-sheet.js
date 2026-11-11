@@ -73,7 +73,7 @@
           <button class="rec-btn main" id="recSave" type="button">남기기</button>
         </div>
         <div class="rec-row" id="recConfirm" hidden>
-          <p class="rec-ask">이 기록을 뺄까요? 잘못 누른 거라면 괜찮아요.</p>
+          <p class="rec-ask">이 기록을 뺄까요?</p>
           <button class="rec-btn quiet grow" id="recKeep" type="button">그대로 둘래요</button>
           <button class="rec-btn" id="recYes" type="button">빼기</button>
         </div>

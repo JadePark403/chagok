@@ -98,8 +98,7 @@
     .empty { color: var(--soft); text-align: center; padding: 22px 10px; font-size: 0.95rem; }
 
     /* 새 쪽지 넣기 */
-    .add-title { font-size: 1.05rem; margin: 30px 0 4px; }
-    .add-sub { color: var(--soft); font-size: 0.88rem; margin: 0 0 10px; }
+    .add-title { font-size: 1.05rem; margin: 30px 0 10px; }
     .add { display: flex; gap: 8px; }
     .add .field { flex: 1; background: var(--card); }
     .add .field:focus { background: var(--bg); }
@@ -138,7 +137,6 @@
     <ul class="cards" id="cards"></ul>
 
     <h2 class="add-title">힘든 날의 나에게 남겨 두기</h2>
-    <p class="add-sub">괜찮은 날, 도움이 됐던 걸 한 줄로 넣어 두세요.</p>
     <form class="add" id="addForm" autocomplete="off">
       <input class="field" id="addInput" maxlength="60" placeholder="예: 따뜻한 물로 샤워하기" />
       <button type="submit">넣어 두기</button>
@@ -185,7 +183,7 @@
       list.innerHTML = "";
 
       if (cards.length === 0) {
-        list.innerHTML = '<li class="empty">아직 비어 있어요.<br>도움이 됐던 작은 것 하나를 아래에 적어 두면,<br>힘든 날의 내가 꺼내 볼 수 있어요.</li>';
+        list.innerHTML = '<li class="empty">아직 비어 있어요.<br>도움이 됐던 것을 한 줄로 적어 두세요.</li>';
       }
 
       // 최근에 넣은 쪽지가 위에 와요
@@ -228,7 +226,7 @@
           <button class="btn main" type="button" data-act="save">고쳐 두기</button>
         </div>
         <div class="row confirm-row" hidden>
-          <p class="ask">이 쪽지를 뺄까요? 다시 넣고 싶으면 언제든 새로 적을 수 있어요.</p>
+          <p class="ask">이 쪽지를 뺄까요?</p>
           <button class="btn quiet grow" type="button" data-act="keep">그대로 둘래요</button>
           <button class="btn" type="button" data-act="remove">빼기</button>
         </div>`;
@@ -303,7 +301,7 @@
       $("addInput").value = "";
       editingId = null;
       render(c.id);
-      whisper("힘든 날의 나에게 잘 넣어 뒀어요.");
+      whisper("넣어 뒀어요.");
     });
 
     render();

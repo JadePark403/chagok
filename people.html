@@ -80,8 +80,7 @@
 
     .empty { color: var(--soft); text-align: center; padding: 22px 10px; font-size: 0.95rem; }
 
-    .add-title { font-size: 1.05rem; margin: 30px 0 4px; }
-    .add-sub { color: var(--soft); font-size: 0.88rem; margin: 0 0 10px; }
+    .add-title { font-size: 1.05rem; margin: 30px 0 10px; }
     .add { display: grid; gap: 8px; }
     .add .field { background: var(--card); }
     .add .field:focus { background: var(--bg); }
@@ -104,12 +103,11 @@
     </div>
 
     <h1>털어놓을 수 있는 사람</h1>
-    <p class="sub">힘들 때 떠올릴 수 있는 사람을 적어 두세요. 한 명이어도 충분해요.</p>
+    <p class="sub">한 명이어도 충분해요.</p>
 
     <ul class="people" id="people"></ul>
 
     <h2 class="add-title">한 사람 적어 두기</h2>
-    <p class="add-sub">이름이나 별명만 적어도 괜찮아요. 번호는 넣고 싶을 때만.</p>
     <form class="add" id="addForm" autocomplete="off">
       <input class="field" id="addName" maxlength="30" placeholder="이름 또는 별명 (예: 언니, 민지)" />
       <input class="field" id="addPhone" type="tel" inputmode="tel" maxlength="20" placeholder="전화번호 (선택)" />
@@ -119,7 +117,7 @@
 
     <div class="note">
       <p>이 목록은 이 기기 안에만 있어요.</p>
-      <p>차곡은 누구에게도 대신 연락하거나, 내가 쓴 글을 보내지 않아요. 전화·문자를 누르면 폰의 전화·문자 앱이 열릴 뿐이에요.</p>
+      <p>차곡이 대신 연락하거나 글을 보내는 일은 없어요.</p>
     </div>
   </main>
 
@@ -146,7 +144,7 @@
       const ul = $("people");
       ul.innerHTML = "";
       if (list.length === 0) {
-        ul.innerHTML = '<li class="empty">아직 비어 있어요.<br>떠오르는 사람이 있다면 아래에 적어 두세요.</li>';
+        ul.innerHTML = '<li class="empty">아직 비어 있어요.</li>';
       }
       for (const p of list) {
         const li = document.createElement("li");
@@ -242,7 +240,7 @@
       $("addPhone").value = "";
       editingId = null;
       render(p.id);
-      whisper("적어 뒀어요. 떠올릴 사람이 있다는 것도 힘이 돼요.");
+      whisper("적어 뒀어요.");
     });
 
     render();
