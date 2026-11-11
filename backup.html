@@ -119,13 +119,14 @@
       vent: "overcome.vent.v1",  // 간직한 글: [{ id, text, at }]
       kit: "chagok.kit.v1",      // 구급상자 쪽지: [{ id, text, at }]
       vented: "chagok.vented.v1", // 털어놓은 조약돌: [{ id, at }] (글 내용 없음)
+      mood: "chagok.mood.v1",     // 오늘 기분: [{ id, at, level }]
     };
 
     function readKey(key) {
       try { return JSON.parse(localStorage.getItem(key)); } catch (e) { return null; }
     }
     function current() {
-      return { done: readKey(KEYS.done), vent: readKey(KEYS.vent), kit: readKey(KEYS.kit), vented: readKey(KEYS.vented) };
+      return { done: readKey(KEYS.done), vent: readKey(KEYS.vent), kit: readKey(KEYS.kit), vented: readKey(KEYS.vented), mood: readKey(KEYS.mood) };
     }
 
     // 모양이 맞는지 확인: 이상한 파일이 기록을 망가뜨리지 않게
@@ -139,7 +140,8 @@
         (data.done == null || isDone(data.done)) &&
         (data.vent == null || isEntryList(data.vent)) &&
         (data.kit == null || isEntryList(data.kit)) &&
-        (data.vented == null || isTimeList(data.vented));
+        (data.vented == null || isTimeList(data.vented)) &&
+        (data.mood == null || (isTimeList(data.mood) && data.mood.every((m) => [1, 2, 3, 4].includes(m.level))));
     }
 
     function summary(d) {
@@ -147,12 +149,13 @@
       const v = (d.vent ? d.vent.length : 0);
       const k = (d.kit ? d.kit.length : 0);
       const t = (d.vented ? d.vented.length : 0);
-      return { n, v, k, t, text: `해낸 일 기록 ${n}개 · 털어놓은 조약돌 ${t}개 · 간직한 글 ${v}개 · 구급상자 쪽지 ${k}장` };
+      const m = (d.mood ? d.mood.length : 0);
+      return { n, v, k, t, m, text: `해낸 일 기록 ${n}개 · 털어놓은 조약돌 ${t}개 · 간직한 글 ${v}개 · 구급상자 쪽지 ${k}장 · 기분 기록 ${m}개` };
     }
     const fmtDate = (iso) => new Date(iso).toLocaleDateString("ko-KR", { year: "numeric", month: "long", day: "numeric" });
 
     function showNow() {
-      $("nowSummary").textContent = "지금 이 기기에는 " + summary(current()).text + "이 있어요.";
+      $("nowSummary").textContent = "지금 이 기기에 있는 기록: " + summary(current()).text;
     }
 
     // ── 저장하기 ──
@@ -211,7 +214,7 @@
       pending = parsed;
       const s = summary(parsed.data);
       $("askFile").textContent =
-        (parsed.savedAt ? fmtDate(parsed.savedAt) + "에 저장한 파일이에요. " : "") + s.text + "이 들어 있어요.";
+        (parsed.savedAt ? fmtDate(parsed.savedAt) + "에 저장한 파일이에요. " : "") + "파일에 든 기록: " + s.text;
       $("askNow").textContent = "지금 이 기기: " + summary(current()).text;
       $("ask").hidden = false;
       $("pickBtn").hidden = true;
