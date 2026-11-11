@@ -2,7 +2,7 @@
 // 내 기록(글, 해낸 일)은 여기서 다루지 않아요. 기록은 늘 브라우저 저장소에만 있어요.
 //
 // 앱 파일을 새로 추가하면 FILES에도 적어 주고, VERSION 숫자를 하나 올려 주세요.
-const VERSION = "chagok-v9";
+const VERSION = "chagok-v10";
 const FILES = [
   "./",
   "./index.html",
@@ -12,6 +12,7 @@ const FILES = [
   "./backup.html",
   "./people.html",
   "./people.js",
+  "./mood.js",
   "./theme.css",
   "./fonts/GowunDodum-Regular.woff2",
   "./help.js",
@@ -43,6 +44,18 @@ self.addEventListener("activate", (event) => {
 self.addEventListener("fetch", (event) => {
   const req = event.request;
   if (req.method !== "GET" || new URL(req.url).origin !== location.origin) return;
+
+  // 글꼴은 바뀌지 않는 큰 파일이라, 보관해 둔 것을 먼저 써요 (화면을 오갈 때 깜빡이지 않게).
+  // 글꼴을 바꿀 땐 파일 이름을 바꾸거나 VERSION을 올려 주세요.
+  if (/\.woff2$/.test(new URL(req.url).pathname)) {
+    event.respondWith(
+      caches.match(req, { ignoreSearch: true }).then((cached) => cached || fetch(req).then((res) => {
+        if (res.ok) { const copy = res.clone(); caches.open(VERSION).then((cache) => cache.put(req, copy)); }
+        return res;
+      }))
+    );
+    return;
+  }
 
   event.respondWith(
     fetch(req)

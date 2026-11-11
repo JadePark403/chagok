@@ -17,6 +17,8 @@
       addEventListener("load", () => navigator.serviceWorker.register("sw.js").catch(() => {}));
     }
   </script>
+  <!-- 글꼴을 미리 불러와서, 기본 글씨체가 잠깐 보였다 바뀌는 깜빡임을 막아요 -->
+  <link rel="preload" href="fonts/GowunDodum-Regular.woff2" as="font" type="font/woff2" crossorigin />
   <link rel="stylesheet" href="theme.css" />
   <style>
     /* 색·글꼴은 theme.css에서 모든 화면이 함께 써요 */

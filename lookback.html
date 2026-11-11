@@ -17,6 +17,8 @@
       addEventListener("load", () => navigator.serviceWorker.register("sw.js").catch(() => {}));
     }
   </script>
+  <!-- 글꼴을 미리 불러와서, 기본 글씨체가 잠깐 보였다 바뀌는 깜빡임을 막아요 -->
+  <link rel="preload" href="fonts/GowunDodum-Regular.woff2" as="font" type="font/woff2" crossorigin />
   <link rel="stylesheet" href="theme.css" />
   <style>
     /* 색·글꼴은 theme.css에서 모든 화면이 함께 써요 */
@@ -83,6 +85,9 @@
     .day-head { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; }
     .day-head strong { font-size: 0.98rem; }
     .day-head .today { font-size: 0.75rem; color: #b06a3e; background: var(--accent-soft); border-radius: 999px; padding: 1px 8px; }
+    /* 그날의 날씨: 일기장 귀퉁이에 적는 것처럼 작게 */
+    .weather { display: inline-flex; width: 22px; height: 22px; flex-shrink: 0; }
+    .weather svg { width: 100%; height: 100%; }
     .mini { display: flex; gap: 2px; margin-left: auto; flex-wrap: wrap; justify-content: flex-end; max-width: 50%; }
     .mini span { width: 13px; height: 10px; border-radius: 50%; }
     .day ul { list-style: none; padding: 0; margin: 0; }
@@ -123,6 +128,7 @@
 
   <script src="help.js"></script>
   <script src="record-sheet.js"></script>
+  <script src="mood.js"></script>
   <script>
     // 이 화면은 "오늘 해낸 일"에서 쌓은 기록을 보여 줘요.
     // 기록을 고치거나 빼는 일은 record-sheet.js의 작은 창에서만 해요.
@@ -248,6 +254,12 @@
         if (!byDay.has(k)) byDay.set(k, { date: r.date, list: [] });
         byDay.get(k).list.push(r);
       }
+      // 그날 마지막으로 고른 날씨 (고르지 않은 날은 아무것도 없어요)
+      const weatherByDay = new Map();
+      for (const m of window.chagokMood.load().sort((a, b) => new Date(a.at) - new Date(b.at))) {
+        weatherByDay.set(dayKey(new Date(m.at)), m.level);
+      }
+
       const days = $("days");
       days.innerHTML = "";
       if (byDay.size > 0) {
@@ -264,6 +276,15 @@
         const title = document.createElement("strong");
         title.textContent = fmtDay(date);
         head.appendChild(title);
+        if (weatherByDay.has(k)) {
+          const level = weatherByDay.get(k);
+          const w = document.createElement("span");
+          w.className = "weather";
+          w.setAttribute("role", "img");
+          w.setAttribute("aria-label", "이날의 날씨: " + window.chagokMood.MOODS.find((x) => x.level === level).label);
+          w.innerHTML = window.chagokMood.svg(level);
+          head.appendChild(w);
+        }
         if (k === todayKey) {
           const t = document.createElement("span");
           t.className = "today";

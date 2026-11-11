@@ -8,7 +8,9 @@
   src: url("fonts/GowunDodum-Regular.woff2") format("woff2");
   font-weight: 400;
   font-style: normal;
-  font-display: swap;
+  /* block: 글꼴이 준비될 때까지 아주 잠깐 기다렸다가 보여 줘요. 기본 글씨체로 먼저 그렸다 바꾸지 않아요.
+     (글꼴은 기기에 보관돼 있어서 기다림은 거의 느껴지지 않아요) */
+  font-display: block;
 }
 
 :root {
