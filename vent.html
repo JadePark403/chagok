@@ -120,7 +120,7 @@
   <!-- 쓰기 -->
   <main class="write" id="writeView">
     <div class="top">
-      <a class="link" href="index.html">← 오늘 해낸 일</a>
+      <a class="link" href="index.html" data-back>← 오늘 해낸 일</a>
       <span class="top-right">
         <button class="link" id="showKept" type="button">간직한 글</button>
         <span data-help-slot></span>
@@ -157,6 +157,7 @@
   <div class="whisper" id="whisper" role="status"></div>
 
   <script src="help.js"></script>
+  <script src="nav.js"></script>
   <script src="people.js"></script>
   <script>
     // ── 간직한 글은 이 브라우저 안(localStorage)에만 저장돼요. 흘려보낸 글은 어디에도 남지 않아요. ──

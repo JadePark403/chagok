@@ -68,7 +68,8 @@
     /* 오늘 기분: 날씨 그림으로 한 번에 */
     .mood { background: var(--card); border-radius: 20px; padding: 14px 12px 12px; margin: 6px 0 14px; }
     .mood-q { margin: 0 6px 10px; font-size: 1rem; }
-    .mood-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+    /* 날씨 버튼이 그려지기 전에도 같은 높이를 차지해서, 아래 내용이 밀려 내려가지 않게 */
+    .mood-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; min-height: 83px; }
     .mood-btn {
       display: flex; flex-direction: column; align-items: center; gap: 2px;
       font: inherit; font-size: 0.8rem; color: var(--soft); cursor: pointer;
@@ -84,6 +85,7 @@
     /* 낮은 날: 부드럽게 펼쳐지는 작은 자리 */
     .low { margin-top: 10px; background: var(--bg); border-radius: 16px; padding: 14px 14px 12px; animation: lowIn .45s ease; }
     .low[hidden] { display: none; }
+    .low.instant { animation: none; }
     @keyframes lowIn { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: none; } }
     .low-hello { margin: 0 0 12px; font-size: 0.95rem; }
     .note-card { background: var(--peach); border-radius: 14px; padding: 14px 16px 10px; }
@@ -590,6 +592,7 @@
         openLow(level);
       } else {
         $("low").hidden = true;
+        clearLow();
         $("moodNote").textContent = "오늘의 기분을 남겨 뒀어요.";
         noteTimer = setTimeout(() => { $("moodNote").textContent = ""; }, 3000);
       }
@@ -598,32 +601,61 @@
     // 낮은 날
     //  흐려요:   구급상자 쪽지 → 조금만 움직이면 되는 일 → 털어놓기(가볍게)
     //  비가 와요: 쉬어 가기 → 과거의 내가 해낸 것 → 털어놓기·사람·도움받을 곳 → (원하면) 누워서도 할 수 있는 일
-    function openLow(level) {
+    // 펼친 자리의 모습(무슨 쪽지·어떤 일·누구를 보여 줬는지)을 잠깐 기억해 둬요.
+    // 다른 화면에 다녀와 홈이 다시 그려져도, 처음부터 같은 모습·같은 길이로 그려져서 스크롤이 튀지 않아요.
+    // (sessionStorage: 앱을 닫으면 비워지는 임시 메모장)
+    const LOW_KEY = "chagok.low";
+    let lowState = null;
+    function saveLow(patch) {
+      lowState = { ...(lowState || {}), ...patch, day: new Date().toDateString() };
+      try { sessionStorage.setItem(LOW_KEY, JSON.stringify(lowState)); } catch (e) {}
+    }
+    function clearLow() {
+      lowState = null;
+      try { sessionStorage.removeItem(LOW_KEY); } catch (e) {}
+    }
+    function savedLow() {
+      try {
+        const v = JSON.parse(sessionStorage.getItem(LOW_KEY));
+        const cur = todayMood();
+        if (v && v.day === new Date().toDateString() && cur && cur.level === v.level && v.level <= 2) return v;
+      } catch (e) {}
+      return null;
+    }
+
+    // restore가 있으면: 아까와 같은 내용으로, 움직임 없이 바로 그려요
+    function openLow(level, restore = null) {
       ["lowRest", "lowPast", "lowNote", "lowMove", "lowLie"].forEach((id) => { $(id).innerHTML = ""; });
       $("lowPerson").hidden = true;
+      $("low").classList.toggle("instant", !!restore);
+      lowState = { level };
+      saveLow({ level });
       $("lowHello").textContent = LOW_HELLO[level];
       const cards = kitCards();
       if (level === 2) {
-        if (cards.length) showNote(cards);
-        showMove();
+        if (cards.length) showNote(cards, restore && restore.noteId);
+        showMove(restore && restore.move);
         $("lowNextLabel").textContent = "털어놓고 싶으면";
         $("lowHelp").hidden = true;
       } else {
         showRest();
         showPast();
-        window.chagokPeople.suggest($("lowPerson"));   // 목록이 비어 있으면 적어 둘 수 있다고만 살짝
+        // 목록이 비어 있으면 적어 둘 수 있다고만 살짝
+        window.chagokPeople.suggest($("lowPerson"), { preferId: restore && restore.personId, onPick: (id) => saveLow({ personId: id }) });
         $("lowNextLabel").textContent = "마음이 무거우면";
         $("lowHelp").hidden = false;
-        showLie(false, "원하면, 누워서도 할 수 있는 일");
+        showLie(!!(restore && restore.lieOpen), "원하면, 누워서도 할 수 있는 일");
+        if (restore && restore.lieOpen) saveLow({ lieOpen: true });
       }
       $("low").hidden = false;
     }
 
     let shownNoteId = null;
-    function showNote(cards) {
+    function showNote(cards, preferId) {
       const pool = cards.length > 1 ? cards.filter((x) => x.id !== shownNoteId) : cards;
-      const card = pool[Math.floor(Math.random() * pool.length)];
+      const card = cards.find((x) => x.id === preferId) || pool[Math.floor(Math.random() * pool.length)];
       shownNoteId = card.id;
+      saveLow({ noteId: card.id });
       const box = $("lowNote");
       box.innerHTML = `
         <div class="note-card">
@@ -642,8 +674,9 @@
 
     // 흐려요: 조금만 움직이면 되는 일, 하나만
     let shownMove = null;
-    function showMove() {
-      shownMove = pickOne(MOVES, shownMove);
+    function showMove(prefer) {
+      shownMove = MOVES.includes(prefer) ? prefer : pickOne(MOVES, shownMove);
+      saveLow({ move: shownMove });
       const box = $("lowMove");
       box.innerHTML = `
         <div class="move-card">
@@ -657,7 +690,7 @@
       const name = shownMove;
       box.querySelector(".text").textContent = name;
       box.querySelector('[data-act="did"]').addEventListener("click", (e) => recordLoose(name, e.currentTarget));
-      box.querySelector('[data-act="other"]').addEventListener("click", showMove);
+      box.querySelector('[data-act="other"]').addEventListener("click", () => showMove());
     }
 
     // 비가 와요: 쉬어 가기로 한 것도 내가 고른 일이에요
@@ -722,7 +755,7 @@
       if (!open) {
         box.innerHTML = '<button class="link low-more" type="button"></button>';
         box.querySelector("button").textContent = label;
-        box.querySelector("button").addEventListener("click", () => showLie(true));
+        box.querySelector("button").addEventListener("click", () => { showLie(true); saveLow({ lieOpen: true }); });
         return;
       }
       box.innerHTML = '<p class="low-sub">누워서도 할 수 있는 일. 하고 싶을 때만요.</p><ul class="lie-list"></ul>';
@@ -760,9 +793,24 @@
       const tag = btn.querySelector("small");
       if (tag) tag.textContent = "했다면 탭"; else btn.textContent = btn.dataset.label || "해 봤어요";
     }
-    $("lowClose").addEventListener("click", () => { $("low").hidden = true; });
+    $("lowClose").addEventListener("click", () => { $("low").hidden = true; clearLow(); });
 
     renderMood();
+    // 아까 펼쳐 둔 자리가 있으면, 처음 그릴 때부터 같은 모습으로 (늦게 펼쳐지며 길이가 바뀌지 않게)
+    (function () { const v = savedLow(); if (v) openLow(v.level, v); })();
+
+    // 뒤로 와서 폰이 기억해 둔 홈(back-forward cache)이 그대로 돌아왔을 때:
+    // 새로 불러오지 않고, 그사이 바뀌었을 수 있는 기록·기분만 조용히 최신으로 바꿔요.
+    addEventListener("pageshow", (e) => {
+      if (!e.persisted) return;
+      hideToast();
+      state = load();
+      render();
+      renderMood();
+      const v = savedLow();
+      if (v) openLow(v.level, v);
+      else if (!$("low").hidden && !(todayMood() && todayMood().level <= 2)) $("low").hidden = true;
+    });
 
     // 인트로 걷기: 1초 안쪽에 부드럽게 사라지고, 탭하면 바로 넘어가요
     (function () {

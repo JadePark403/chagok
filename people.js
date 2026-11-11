@@ -74,9 +74,12 @@
       el.hidden = false;
       return true;
     }
+    // preferId: 아까 보여 준 사람을 그대로 (화면에 돌아왔을 때 바뀌지 않게)
+    const kept = opts.preferId && list.find((x) => x.id === opts.preferId);
     const pool = list.length > 1 ? list.filter((x) => x.id !== lastId) : list;
-    const person = pool[Math.floor(Math.random() * pool.length)];
+    const person = kept || pool[Math.floor(Math.random() * pool.length)];
     lastId = person.id;
+    if (opts.onPick) opts.onPick(person.id);
 
     const box = document.createElement("div");
     box.className = "ppl-hint";
@@ -94,7 +97,7 @@
       other.type = "button";
       other.className = "ppl-quiet grow";
       other.textContent = "다른 사람";
-      other.addEventListener("click", () => suggest(el, opts));
+      other.addEventListener("click", () => suggest(el, { ...opts, preferId: null }));
       row.appendChild(other);
     } else if (links.length) {
       const spacer = document.createElement("span");
