@@ -152,6 +152,17 @@
       return [];
     }
     const VENT_NAME = "털어놓았어요";
+    // 기분이 "비가 와요"인 날, 쉬어 가기로 한 시간 (홈이 남겨요. 내용은 없어요)
+    const REST_KEY = "chagok.rest.v1";
+    function loadRest() {
+      try {
+        const list = JSON.parse(localStorage.getItem(REST_KEY));
+        if (Array.isArray(list)) return list.filter((v) => v && typeof v.at === "string");
+      } catch (e) {}
+      return [];
+    }
+    const REST_NAME = "쉬어 가기로 했어요";
+    const REST_TONE = "#d9b89a";   // 쉬어 간 조약돌: 살구보다 모래에 가까운 뽀얀 색
     // 조약돌 색을 크림과 섞어 뽀얗게 만들어요 (amount: 원래 색이 남는 정도)
     const ventColor = (c, amount = 0.42) => {
       const n = parseInt(c.slice(1), 16), cream = [253, 248, 242];
@@ -208,6 +219,7 @@
     function render(animate) {
       const records = load().records
         .concat(loadVented().map((v) => ({ id: v.id, at: v.at, name: VENT_NAME, vent: true })))
+        .concat(loadRest().map((v) => ({ id: v.id, at: v.at, name: REST_NAME, vent: true, rest: true })))
         .map((r) => ({ ...r, date: new Date(r.at) }))
         .filter((r) => r.date >= weekStart && r.date < weekEnd)
         .sort((a, b) => a.date - b.date);   // 먼저 해낸 것이 아래에 깔려요
@@ -228,22 +240,25 @@
           p.className = "pebble" + (r.vent ? " vent" : "") + (animate ? " drop" : "");
           p.style.width = look.w + "px";
           p.style.height = look.ht + "px";
-          p.style.background = r.vent ? ventFill(look.color)
+          p.style.background = r.vent ? ventFill(r.rest ? REST_TONE : look.color)
             : `radial-gradient(circle at 32% 30%, rgba(255,255,255,.45), transparent 45%), ${look.color}`;
           p.style.borderRadius = look.radius;
           p.style.setProperty("--rot", look.rot + "deg");
           p.style.transform = `rotate(${look.rot}deg)`;
           if (animate) p.style.animationDelay = (records.length > 1 ? (i / (records.length - 1)) * totalDrop : 0) + "ms";
           p.setAttribute("aria-label", `${fmtShort(r.date)} ${fmtTime(r.date)} · ${r.name}`);
-          // 털어놓은 조약돌은 고칠 것이 없어서, 언제였는지만 조용히 알려 줘요
+          // 털어놓은·쉬어 간 조약돌은 고칠 것이 없어서, 언제였는지만 조용히 알려 줘요
           p.addEventListener("click", () => r.vent
-            ? ($("caption").textContent = `${fmtShort(r.date)} ${fmtTime(r.date)} · 털어놓았어요. 그것도 해낸 거예요.`)
+            ? ($("caption").textContent = `${fmtShort(r.date)} ${fmtTime(r.date)} · ` +
+                (r.rest ? "쉬어 가기로 했어요. 그것도 내가 고른 일이에요." : "털어놓았어요. 그것도 해낸 거예요."))
             : openSheet(r.id));
           pile.appendChild(p);
         });
-        const vents = records.filter((r) => r.vent).length;
+        const vents = records.filter((r) => r.vent && !r.rest).length;
+        const rests = records.filter((r) => r.rest).length;
+        const parts = [vents && `${vents}개는 털어놓은`, rests && `${rests}개는 쉬어 간`].filter(Boolean);
         $("count").textContent = `이번 주에 조약돌 ${records.length}개가 쌓였어요.` +
-          (vents ? ` 그중 ${vents}개는 털어놓은 조약돌이에요.` : "");
+          (parts.length ? ` 그중 ${parts.join(", ")} 조약돌이에요.` : "");
         $("caption").textContent = "조약돌을 누르면 그 기록을 보고 고칠 수 있어요.";
       }
 
@@ -297,7 +312,7 @@
         for (const r of list) {
           const s = document.createElement("span");
           const c = pebbleLook(r.id).color;
-          s.style.background = r.vent ? ventColor(c) : c;
+          s.style.background = r.vent ? ventColor(r.rest ? REST_TONE : c) : c;
           if (r.vent) s.className = "vent";
           mini.appendChild(s);
         }

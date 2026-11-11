@@ -123,13 +123,14 @@
       vented: "chagok.vented.v1", // 털어놓은 조약돌: [{ id, at }] (글 내용 없음)
       mood: "chagok.mood.v1",     // 오늘 기분: [{ id, at, level }]
       people: "chagok.people.v1", // 털어놓을 수 있는 사람: [{ id, name, phone?, at }]
+      rest: "chagok.rest.v1",     // 쉬어 가기로 한 날: [{ id, at }] (내용 없음)
     };
 
     function readKey(key) {
       try { return JSON.parse(localStorage.getItem(key)); } catch (e) { return null; }
     }
     function current() {
-      return { done: readKey(KEYS.done), vent: readKey(KEYS.vent), kit: readKey(KEYS.kit), vented: readKey(KEYS.vented), mood: readKey(KEYS.mood), people: readKey(KEYS.people) };
+      return { done: readKey(KEYS.done), vent: readKey(KEYS.vent), kit: readKey(KEYS.kit), vented: readKey(KEYS.vented), mood: readKey(KEYS.mood), people: readKey(KEYS.people), rest: readKey(KEYS.rest) };
     }
 
     // 모양이 맞는지 확인: 이상한 파일이 기록을 망가뜨리지 않게
@@ -145,6 +146,7 @@
         (data.kit == null || isEntryList(data.kit)) &&
         (data.vented == null || isTimeList(data.vented)) &&
         (data.mood == null || (isTimeList(data.mood) && data.mood.every((m) => [1, 2, 3, 4].includes(m.level)))) &&
+        (data.rest == null || isTimeList(data.rest)) &&
         (data.people == null || (Array.isArray(data.people) && data.people.every((x) =>
           x && typeof x.id === "string" && typeof x.name === "string" && (x.phone == null || typeof x.phone === "string"))));
     }
@@ -156,7 +158,8 @@
       const t = (d.vented ? d.vented.length : 0);
       const m = (d.mood ? d.mood.length : 0);
       const pp = (d.people ? d.people.length : 0);
-      return { n, v, k, t, m, pp, text: `해낸 일 기록 ${n}개 · 털어놓은 조약돌 ${t}개 · 간직한 글 ${v}개 · 구급상자 쪽지 ${k}장 · 기분 기록 ${m}개 · 털어놓을 사람 ${pp}명` };
+      const r = (d.rest ? d.rest.length : 0);
+      return { n, v, k, t, m, pp, r, text: `해낸 일 기록 ${n}개 · 털어놓은 조약돌 ${t}개 · 쉬어 간 조약돌 ${r}개 · 간직한 글 ${v}개 · 구급상자 쪽지 ${k}장 · 기분 기록 ${m}개 · 털어놓을 사람 ${pp}명` };
     }
     const fmtDate = (iso) => new Date(iso).toLocaleDateString("ko-KR", { year: "numeric", month: "long", day: "numeric" });
 
