@@ -172,7 +172,7 @@
       display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px;
       position: fixed; inset: 0; z-index: 100;
       background: var(--bg); cursor: pointer;
-      transition: opacity .35s ease;
+      transition: opacity .45s ease;
     }
     .splash svg { width: 96px; height: 96px; }
     .splash .name { font-size: 1.7rem; letter-spacing: 0.1em; color: var(--text); }
@@ -436,10 +436,10 @@
         if (calm) { finish(); return; }                 // 움직임 줄이기: 그냥 사라져요
         if (quick) splash.style.transitionDuration = "0.15s";
         splash.classList.add("leaving");
-        setTimeout(finish, quick ? 200 : 400);
+        setTimeout(finish, quick ? 200 : 500);
       };
       splash.addEventListener("pointerdown", () => leave(true));
-      setTimeout(() => leave(false), calm ? 400 : 550); // 보통: 0.55초 보이고 0.35초 사라짐
+      setTimeout(() => leave(false), calm ? 400 : 850); // 보통: 0.85초 보이고 0.45초 사라짐
     })();
   </script>
 </body>
