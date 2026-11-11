@@ -1,0 +1,310 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>나의 구급상자 · 차곡</title>
+  <!-- PWA: 폰 홈 화면에 설치하고, 인터넷이 끊겨도 열리게 -->
+  <link rel="manifest" href="manifest.webmanifest" />
+  <meta name="theme-color" content="#faf6f0" />
+  <link rel="icon" href="icon.svg" type="image/svg+xml" />
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-title" content="차곡" />
+  <script>
+    if ("serviceWorker" in navigator) {
+      addEventListener("load", () => navigator.serviceWorker.register("sw.js").catch(() => {}));
+    }
+  </script>
+  <link rel="stylesheet" href="theme.css" />
+  <style>
+    /* 색·글꼴은 theme.css에서 모든 화면이 함께 써요 */
+    main { max-width: 480px; margin: 0 auto; padding: 14px 18px 60px; }
+
+    /* 위쪽 줄은 스크롤해도 붙어 있어서, "도움받을 곳"이 언제나 한 번에 닿아요 */
+    .top {
+      display: flex; justify-content: space-between; align-items: center; min-height: 36px;
+      position: sticky; top: 0; z-index: 5; background: var(--bg);
+      margin: -14px -18px 0; padding: 10px 18px 6px;
+    }
+    .link { color: var(--soft); font-size: 0.9rem; text-decoration: none; padding: 6px 2px; }
+    .link:hover, .link:focus-visible { color: var(--text); }
+
+    h1 { font-size: 1.6rem; margin: 14px 0 2px; }
+    .sub { color: var(--soft); font-size: 0.92rem; margin: 0 0 20px; }
+
+    /* 꺼내 본 쪽지 */
+    .pick {
+      background: var(--peach); border-radius: 20px; padding: 20px 20px 16px; margin: 0 0 18px;
+      animation: open .35s ease;
+    }
+    .pick[hidden] { display: none; }
+    .pick .from { color: var(--accent-deep); font-size: 0.85rem; margin: 0 0 6px; }
+    .pick .text { font-size: 1.25rem; margin: 0; line-height: 1.5; }
+    .pick .row { display: flex; justify-content: flex-end; gap: 4px; margin-top: 12px; }
+    @keyframes open { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+
+    .pick-btn {
+      display: block; width: 100%; margin: 0 0 18px; padding: 14px 18px;
+      font: inherit; font-size: 0.98rem; cursor: pointer; text-align: center;
+      border: none; border-radius: var(--radius); background: var(--accent-soft); color: var(--text);
+    }
+    .pick-btn:active { background: var(--peach); }
+    .pick-btn[hidden] { display: none; }
+
+    /* 쪽지 목록 */
+    .cards { list-style: none; padding: 0; margin: 0 0 16px; display: grid; gap: 10px; }
+    .card {
+      display: block; width: 100%; text-align: left; cursor: pointer;
+      font: inherit; color: inherit; border: none;
+      background: var(--card); border-radius: var(--radius); padding: 14px 18px;
+      transition: transform .15s ease, background .2s ease;
+    }
+    .card:active { transform: scale(0.98); background: var(--card-press); }
+    .card:focus-visible { outline: 2px solid var(--soft); outline-offset: 2px; }
+    .card .text { display: block; font-size: 1.05rem; }
+    .card .from { display: block; color: var(--soft); font-size: 0.8rem; margin-top: 2px; }
+    .card.flash { animation: flash .9s ease; }
+    @keyframes flash { 0% { background: var(--peach); } 100% { background: var(--card); } }
+
+    /* 고치는 중인 쪽지 */
+    .editor { background: var(--card); border-radius: var(--radius); padding: 12px; }
+    .editor .row { display: flex; align-items: center; gap: 6px; margin-top: 10px; flex-wrap: wrap; }
+    .editor .row[hidden] { display: none; }
+    .editor .grow { margin-right: auto; }
+    .ask { width: 100%; margin: 0 0 2px; font-size: 0.92rem; }
+
+    .field {
+      display: block; width: 100%; min-width: 0; font: inherit; color: inherit;
+      padding: 12px 14px; border: 1.5px solid transparent; border-radius: 12px;
+      background: var(--bg); outline: none;
+    }
+    .field::placeholder { color: var(--faint); }
+    .field:focus { border-color: var(--accent); }
+
+    .btn {
+      font: inherit; font-size: 0.95rem; cursor: pointer; border-radius: 12px; padding: 9px 15px;
+      border: none; background: var(--bg); color: var(--text); white-space: nowrap;
+    }
+    .btn.main { background: var(--accent); color: #fff; }
+    .btn.quiet { background: none; color: var(--soft); }
+    .text-link {
+      font: inherit; font-size: 0.88rem; cursor: pointer; border: none; background: none;
+      color: var(--soft); padding: 8px 2px; text-decoration: underline; text-underline-offset: 3px;
+    }
+
+    .empty { color: var(--soft); text-align: center; padding: 22px 10px; font-size: 0.95rem; }
+
+    /* 새 쪽지 넣기 */
+    .add-title { font-size: 1.05rem; margin: 30px 0 4px; }
+    .add-sub { color: var(--soft); font-size: 0.88rem; margin: 0 0 10px; }
+    .add { display: flex; gap: 8px; }
+    .add .field { flex: 1; background: var(--card); }
+    .add .field:focus { background: var(--bg); }
+    .add button {
+      font: inherit; border: none; border-radius: 14px; padding: 0 18px;
+      background: var(--accent); color: #fff; cursor: pointer;
+      white-space: nowrap; flex-shrink: 0;
+    }
+    .whisper { color: var(--accent-deep); font-size: 0.88rem; min-height: 1.5em; margin: 8px 2px 0; }
+
+    @media (prefers-reduced-motion: reduce) {
+      .pick, .card.flash { animation: none; }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <div class="top">
+      <a class="link" href="index.html">← 오늘 해낸 일</a>
+      <span data-help-slot></span>
+    </div>
+
+    <h1>나의 구급상자</h1>
+    <p class="sub">괜찮았던 날의 내가, 힘든 날의 나에게 남겨 둔 쪽지예요.</p>
+
+    <section class="pick" id="pick" hidden aria-live="polite">
+      <p class="from" id="pickFrom"></p>
+      <p class="text" id="pickText"></p>
+      <div class="row">
+        <button class="btn quiet" id="pickAgain" type="button">다른 쪽지</button>
+        <button class="btn quiet" id="pickClose" type="button">접어 두기</button>
+      </div>
+    </section>
+    <button class="pick-btn" id="pickBtn" type="button" hidden>쪽지 하나만 꺼내 보기</button>
+
+    <ul class="cards" id="cards"></ul>
+
+    <h2 class="add-title">힘든 날의 나에게 남겨 두기</h2>
+    <p class="add-sub">괜찮은 날, 도움이 됐던 걸 한 줄로 넣어 두세요.</p>
+    <form class="add" id="addForm" autocomplete="off">
+      <input class="field" id="addInput" maxlength="60" placeholder="예: 따뜻한 물로 샤워하기" />
+      <button type="submit">넣어 두기</button>
+    </form>
+    <p class="whisper" id="whisper" role="status"></p>
+  </main>
+
+  <script src="help.js"></script>
+  <script>
+    // 구급상자 쪽지는 이 브라우저 저장소(localStorage)에만 있어요. 어디로도 보내지 않아요.
+    // 모양: [{ id, text, at(남긴 날) }]
+    const KEY = "chagok.kit.v1";
+    const $ = (id) => document.getElementById(id);
+    const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+
+    function load() {
+      try {
+        const d = JSON.parse(localStorage.getItem(KEY));
+        if (Array.isArray(d)) return d;
+      } catch (e) {}
+      return [];
+    }
+    function save() {
+      try { localStorage.setItem(KEY, JSON.stringify(cards)); } catch (e) {}
+    }
+
+    let cards = load();
+    let editingId = null;
+    let pickedId = null;
+    let whisperTimer = null;
+
+    const fromText = (c) =>
+      new Date(c.at).toLocaleDateString("ko-KR", { month: "long", day: "numeric" }) + "의 내가 남긴 쪽지";
+
+    function whisper(text) {
+      $("whisper").textContent = text;
+      clearTimeout(whisperTimer);
+      whisperTimer = setTimeout(() => { $("whisper").textContent = ""; }, 3500);
+    }
+
+    function render(flashId) {
+      const list = $("cards");
+      list.innerHTML = "";
+
+      if (cards.length === 0) {
+        list.innerHTML = '<li class="empty">아직 비어 있어요.<br>도움이 됐던 작은 것 하나를 아래에 적어 두면,<br>힘든 날의 내가 꺼내 볼 수 있어요.</li>';
+      }
+
+      // 최근에 넣은 쪽지가 위에 와요
+      [...cards].reverse().forEach((c) => {
+        const li = document.createElement("li");
+        if (c.id === editingId) li.appendChild(editor(c));
+        else {
+          const b = document.createElement("button");
+          b.type = "button";
+          b.className = "card" + (c.id === flashId ? " flash" : "");
+          b.dataset.id = c.id;
+          const t = document.createElement("span");
+          t.className = "text";
+          t.textContent = c.text;
+          const f = document.createElement("span");
+          f.className = "from";
+          f.textContent = fromText(c);
+          b.append(t, f);
+          b.addEventListener("click", () => { editingId = c.id; render(); focusEditor(); });
+          li.appendChild(b);
+        }
+        list.appendChild(li);
+      });
+
+      // 쪽지가 두 장 이상이면, 하나만 골라 크게 꺼내 볼 수 있어요
+      $("pickBtn").hidden = cards.length < 2 || pickedId !== null;
+      $("pickAgain").hidden = cards.length < 2;
+      if (pickedId !== null && !cards.some((c) => c.id === pickedId)) closePick();
+    }
+
+    // 탭한 쪽지는 그 자리에서 고치거나 뺄 수 있어요
+    function editor(c) {
+      const box = document.createElement("div");
+      box.className = "editor";
+      box.innerHTML = `
+        <input class="field" maxlength="60" autocomplete="off" aria-label="쪽지 고치기" />
+        <div class="row main-row">
+          <button class="text-link grow" type="button" data-act="ask">구급상자에서 빼기</button>
+          <button class="btn quiet" type="button" data-act="cancel">그대로 두기</button>
+          <button class="btn main" type="button" data-act="save">고쳐 두기</button>
+        </div>
+        <div class="row confirm-row" hidden>
+          <p class="ask">이 쪽지를 뺄까요? 다시 넣고 싶으면 언제든 새로 적을 수 있어요.</p>
+          <button class="btn quiet grow" type="button" data-act="keep">그대로 둘래요</button>
+          <button class="btn" type="button" data-act="remove">빼기</button>
+        </div>`;
+      const input = box.querySelector("input");
+      input.value = c.text;
+      const mainRow = box.querySelector(".main-row"), confirmRow = box.querySelector(".confirm-row");
+      const showConfirm = (on) => { mainRow.hidden = on; confirmRow.hidden = !on; input.disabled = on; };
+
+      const done = (flash) => { editingId = null; render(flash); };
+      const saveEdit = () => {
+        const text = input.value.trim();
+        if (!text) { showConfirm(true); return; }   // 다 지우면 뺄지 물어봐요
+        if (text !== c.text) { c.text = text; save(); }
+        done(c.id);
+        if (pickedId === c.id) showPick(c);
+      };
+
+      box.addEventListener("click", (e) => {
+        const act = e.target.dataset && e.target.dataset.act;
+        if (act === "save") saveEdit();
+        else if (act === "cancel") done();
+        else if (act === "ask") showConfirm(true);
+        else if (act === "keep") { showConfirm(false); if (!input.value.trim()) input.value = c.text; input.focus(); }
+        else if (act === "remove") {
+          cards = cards.filter((x) => x.id !== c.id);
+          save();
+          done();
+          whisper("쪽지를 뺐어요.");
+        }
+      });
+      input.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") { e.preventDefault(); saveEdit(); }
+        if (e.key === "Escape") done();
+      });
+      return box;
+    }
+    function focusEditor() {
+      const input = document.querySelector(".editor input");
+      if (input) { input.focus(); input.setSelectionRange(input.value.length, input.value.length); }
+    }
+
+    // 쪽지 하나 꺼내 보기: 많은 쪽지 대신 하나만 조용히
+    function showPick(c) {
+      pickedId = c.id;
+      $("pickFrom").textContent = "과거의 내가 지금의 나에게";
+      $("pickText").textContent = c.text;
+      $("pick").hidden = false;
+      $("pickAgain").hidden = cards.length < 2;
+      $("pickBtn").hidden = true;
+    }
+    function pickRandom() {
+      const others = cards.filter((c) => c.id !== pickedId);
+      if (others.length === 0) return;
+      showPick(others[Math.floor(Math.random() * others.length)]);
+    }
+    function closePick() {
+      pickedId = null;
+      $("pick").hidden = true;
+      $("pickBtn").hidden = cards.length < 2;
+    }
+    $("pickBtn").addEventListener("click", pickRandom);
+    $("pickAgain").addEventListener("click", pickRandom);
+    $("pickClose").addEventListener("click", closePick);
+
+    $("addForm").addEventListener("submit", (e) => {
+      e.preventDefault();
+      const text = $("addInput").value.trim();
+      if (!text) return;
+      const c = { id: uid(), text, at: new Date().toISOString() };
+      cards.push(c);
+      save();
+      $("addInput").value = "";
+      editingId = null;
+      render(c.id);
+      whisper("힘든 날의 나에게 잘 넣어 뒀어요.");
+    });
+
+    render();
+  </script>
+</body>
+</html>
