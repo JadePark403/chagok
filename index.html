@@ -56,6 +56,12 @@
       color: var(--soft); text-decoration: none; font-size: 0.95rem;
     }
 
+    .backup-link {
+      display: block; width: fit-content; margin: 18px auto 0; padding: 6px 4px;
+      color: var(--soft); font-size: 0.85rem;
+      text-decoration: underline; text-underline-offset: 3px;
+    }
+
     /* 항목 목록 */
     .items { list-style: none; padding: 0; margin: 0 0 16px; display: grid; gap: 10px; }
     .item {
@@ -223,6 +229,7 @@
     <ul class="log" id="log"></ul>
 
     <a class="look-link" href="lookback.html">이번 주 돌아보기 →</a>
+    <a class="backup-link" href="backup.html">내 기록 백업하기</a>
   </main>
 
   <div class="toast" id="toast" role="status">

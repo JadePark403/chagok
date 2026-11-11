@@ -1,0 +1,256 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>기록 백업 · 차곡</title>
+  <!-- PWA: 폰 홈 화면에 설치하고, 인터넷이 끊겨도 열리게 -->
+  <link rel="manifest" href="manifest.webmanifest" />
+  <meta name="theme-color" content="#faf6f0" />
+  <link rel="icon" href="icon.svg" type="image/svg+xml" />
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-title" content="차곡" />
+  <script>
+    if ("serviceWorker" in navigator) {
+      addEventListener("load", () => navigator.serviceWorker.register("sw.js").catch(() => {}));
+    }
+  </script>
+  <link rel="stylesheet" href="theme.css" />
+  <style>
+    /* 색·글꼴은 theme.css에서 모든 화면이 함께 써요 */
+    main { max-width: 480px; margin: 0 auto; padding: 14px 18px 60px; }
+    .top {
+      display: flex; justify-content: space-between; align-items: center; min-height: 36px;
+      position: sticky; top: 0; z-index: 5; background: var(--bg);
+      margin: -14px -18px 0; padding: 10px 18px 6px;
+    }
+    .link { color: var(--soft); font-size: 0.9rem; text-decoration: none; padding: 6px 2px; }
+    .link:hover, .link:focus-visible { color: var(--text); }
+
+    h1 { font-size: 1.6rem; margin: 14px 0 2px; }
+    .sub { color: var(--soft); font-size: 0.92rem; margin: 0 0 20px; }
+
+    .box { background: var(--card); border-radius: 20px; padding: 18px 18px 16px; margin: 0 0 14px; }
+    .box h2 { font-size: 1.1rem; margin: 0 0 4px; }
+    .box p { margin: 0 0 12px; font-size: 0.92rem; color: var(--soft); }
+    .now { color: var(--text) !important; }
+
+    .btn {
+      display: block; width: 100%; font: inherit; font-size: 1rem; cursor: pointer; text-align: center;
+      border: none; border-radius: 14px; padding: 13px 16px; white-space: nowrap;
+      background: var(--accent); color: #fff; text-decoration: none;
+    }
+    .btn:active { transform: scale(0.98); }
+    .btn.soft { background: var(--bg); color: var(--text); }
+    .btn.quiet { background: none; color: var(--soft); }
+    .row { display: flex; gap: 8px; margin-top: 12px; }
+    .row .btn { flex: 1; }
+    .row[hidden], [hidden] { display: none !important; }
+
+    /* 파일을 고르는 칸은 숨기고, 버튼으로 열어요 */
+    .file { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
+
+    .ask { background: var(--peach); border-radius: 16px; padding: 14px 16px; margin-top: 12px; }
+    .ask p { color: var(--text); margin: 0 0 6px; }
+    .ask .small { color: var(--accent-deep); font-size: 0.85rem; margin: 0; }
+    .ask .first { margin-top: 10px; font-size: 0.85rem; }
+    .ask .first button {
+      font: inherit; border: none; background: none; color: var(--accent-deep); padding: 4px 0; cursor: pointer;
+      text-decoration: underline; text-underline-offset: 3px;
+    }
+
+    .whisper { color: var(--accent-deep); font-size: 0.9rem; min-height: 1.5em; margin: 10px 2px 0; }
+    .note { color: var(--soft); font-size: 0.82rem; margin: 22px 2px 0; border-top: 1px solid var(--line); padding-top: 12px; }
+    .note p { margin: 0 0 6px; }
+  </style>
+</head>
+<body>
+  <main>
+    <div class="top">
+      <a class="link" href="index.html">← 오늘 해낸 일</a>
+      <span data-help-slot></span>
+    </div>
+
+    <h1>기록 백업</h1>
+    <p class="sub">내 기록을 파일 하나로 내 폰에 저장해 두고, 필요할 때 다시 불러올 수 있어요.</p>
+
+    <section class="box">
+      <h2>파일로 저장하기</h2>
+      <p class="now" id="nowSummary"></p>
+      <button class="btn" id="saveBtn" type="button">파일로 저장하기</button>
+      <p class="whisper" id="saveMsg" role="status"></p>
+    </section>
+
+    <section class="box">
+      <h2>파일에서 불러오기</h2>
+      <p>예전에 저장해 둔 차곡 백업 파일을 골라 주세요.</p>
+      <input class="file" id="fileInput" type="file" tabindex="-1" aria-hidden="true" />
+      <button class="btn soft" id="pickBtn" type="button">백업 파일 고르기</button>
+
+      <div class="ask" id="ask" hidden>
+        <p id="askFile"></p>
+        <p>불러오면 지금 이 기기의 기록이 <strong>이 파일의 내용으로 바뀌어요.</strong> 바꿀까요?</p>
+        <p class="small" id="askNow"></p>
+        <div class="first"><button id="saveFirst" type="button">지금 기록부터 파일로 저장해 둘래요</button></div>
+        <div class="row">
+          <button class="btn quiet" id="cancelBtn" type="button">그대로 둘래요</button>
+          <button class="btn" id="loadBtn" type="button">불러오기</button>
+        </div>
+      </div>
+      <p class="whisper" id="loadMsg" role="status"></p>
+    </section>
+
+    <div class="note">
+      <p>백업 파일은 이 폰 안에서만 만들어지고, 어디로도 보내지지 않아요.</p>
+      <p>파일 안의 글은 잠겨 있지 않아요. 간직한 글도 들어 있으니, 믿을 수 있는 곳에만 보관해 주세요.</p>
+      <p>폰을 바꾸거나 브라우저 저장소가 지워질 때를 위해, 가끔 한 번씩 저장해 두면 마음이 놓여요.</p>
+    </div>
+  </main>
+
+  <script src="help.js"></script>
+  <script>
+    // 백업: 이 기기 저장소(localStorage)의 기록을 파일 하나로 만들고, 그 파일로 다시 되돌려요.
+    // 파일은 폰 안에서만 만들어지고 읽혀요. 서버로는 아무것도 보내지 않아요.
+    const $ = (id) => document.getElementById(id);
+    const KEYS = {
+      done: "overcome.v1",       // 해낸 일: { items, records }
+      vent: "overcome.vent.v1",  // 간직한 글: [{ id, text, at }]
+      kit: "chagok.kit.v1",      // 구급상자 쪽지: [{ id, text, at }]
+    };
+
+    function readKey(key) {
+      try { return JSON.parse(localStorage.getItem(key)); } catch (e) { return null; }
+    }
+    function current() {
+      return { done: readKey(KEYS.done), vent: readKey(KEYS.vent), kit: readKey(KEYS.kit) };
+    }
+
+    // 모양이 맞는지 확인: 이상한 파일이 기록을 망가뜨리지 않게
+    const isEntryList = (v) => Array.isArray(v) && v.every((x) => x && typeof x.id === "string" && typeof x.text === "string");
+    const isDone = (v) => v && Array.isArray(v.items) && Array.isArray(v.records) &&
+      v.items.every((x) => x && typeof x.id === "string" && typeof x.name === "string") &&
+      v.records.every((x) => x && typeof x.id === "string" && typeof x.at === "string");
+    function valid(data) {
+      return data && typeof data === "object" &&
+        (data.done == null || isDone(data.done)) &&
+        (data.vent == null || isEntryList(data.vent)) &&
+        (data.kit == null || isEntryList(data.kit));
+    }
+
+    function summary(d) {
+      const n = (d.done && d.done.records ? d.done.records.length : 0);
+      const v = (d.vent ? d.vent.length : 0);
+      const k = (d.kit ? d.kit.length : 0);
+      return { n, v, k, text: `해낸 일 기록 ${n}개 · 간직한 글 ${v}개 · 구급상자 쪽지 ${k}장` };
+    }
+    const fmtDate = (iso) => new Date(iso).toLocaleDateString("ko-KR", { year: "numeric", month: "long", day: "numeric" });
+
+    function showNow() {
+      $("nowSummary").textContent = "지금 이 기기에는 " + summary(current()).text + "이 있어요.";
+    }
+
+    // ── 저장하기 ──
+    function makeFile() {
+      const now = new Date();
+      const backup = { app: "chagok", format: 1, savedAt: now.toISOString(), data: current() };
+      const p = (x) => String(x).padStart(2, "0");
+      const name = `chagok-backup-${now.getFullYear()}-${p(now.getMonth() + 1)}-${p(now.getDate())}.json`;
+      return new File([JSON.stringify(backup, null, 1)], name, { type: "application/json" });
+    }
+
+    async function saveBackup(msgEl) {
+      const file = makeFile();
+      // 아이폰(Safari·홈 화면 앱): 공유 창이 열려요 → "파일에 저장"을 고르면 돼요
+      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        try {
+          await navigator.share({ files: [file] });
+          msgEl.textContent = "저장할 곳을 골랐다면, 백업이 끝났어요.";
+        } catch (e) {
+          if (e && e.name === "AbortError") msgEl.textContent = "저장하지 않고 닫았어요. 괜찮아요.";
+          else downloadFile(file, msgEl);
+        }
+        return;
+      }
+      downloadFile(file, msgEl);
+    }
+    // 공유 창이 없는 브라우저(컴퓨터 등): 바로 내려받아요
+    function downloadFile(file, msgEl) {
+      const url = URL.createObjectURL(file);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = file.name;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 10000);
+      msgEl.textContent = `"${file.name}" 파일로 저장했어요.`;
+    }
+    $("saveBtn").addEventListener("click", () => saveBackup($("saveMsg")));
+
+    // ── 불러오기 ──
+    let pending = null;   // 고른 파일의 내용 (아직 쓰지 않음)
+
+    $("pickBtn").addEventListener("click", () => { $("fileInput").value = ""; $("fileInput").click(); });
+    $("fileInput").addEventListener("change", async () => {
+      const f = $("fileInput").files[0];
+      if (!f) return;
+      $("loadMsg").textContent = "";
+      hideAsk();
+      let parsed = null;
+      try { parsed = JSON.parse(await f.text()); } catch (e) {}
+      if (!parsed || parsed.app !== "chagok" || !valid(parsed.data)) {
+        $("loadMsg").textContent = "차곡 백업 파일이 아닌 것 같아요. 다른 파일을 골라 주세요.";
+        return;
+      }
+      pending = parsed;
+      const s = summary(parsed.data);
+      $("askFile").textContent =
+        (parsed.savedAt ? fmtDate(parsed.savedAt) + "에 저장한 파일이에요. " : "") + s.text + "이 들어 있어요.";
+      $("askNow").textContent = "지금 이 기기: " + summary(current()).text;
+      $("ask").hidden = false;
+      $("pickBtn").hidden = true;
+      $("cancelBtn").focus();
+    });
+
+    function hideAsk() {
+      pending = null;
+      $("ask").hidden = true;
+      $("pickBtn").hidden = false;
+    }
+    $("cancelBtn").addEventListener("click", () => {
+      hideAsk();
+      $("loadMsg").textContent = "지금 기록을 그대로 두었어요.";
+    });
+    $("saveFirst").addEventListener("click", () => saveBackup($("loadMsg")));
+
+    $("loadBtn").addEventListener("click", () => {
+      if (!pending) return;
+      const data = pending.data;
+      const before = current();   // 혹시 쓰다가 실패하면 되돌리려고
+      try {
+        for (const [part, key] of Object.entries(KEYS)) {
+          if (data[part] == null) localStorage.removeItem(key);
+          else localStorage.setItem(key, JSON.stringify(data[part]));
+        }
+      } catch (e) {
+        for (const [part, key] of Object.entries(KEYS)) {
+          try {
+            if (before[part] == null) localStorage.removeItem(key);
+            else localStorage.setItem(key, JSON.stringify(before[part]));
+          } catch (e2) {}
+        }
+        hideAsk();
+        $("loadMsg").textContent = "불러오지 못했어요. 지금 기록은 그대로예요.";
+        return;
+      }
+      hideAsk();
+      showNow();
+      $("loadMsg").textContent = "다시 불러왔어요. 예전의 내가 쌓은 것들이 돌아왔어요.";
+    });
+
+    showNow();
+  </script>
+</body>
+</html>
