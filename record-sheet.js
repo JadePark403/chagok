@@ -32,7 +32,7 @@
       font: inherit; font-size: 0.95rem; cursor: pointer; border-radius: 12px; padding: 10px 16px;
       border: none; background: var(--card); color: var(--text); white-space: nowrap;
     }
-    .rec-btn.main { background: var(--accent); color: #fff; }
+    .rec-btn.main { background: var(--accent); color: var(--on-accent); }
     .rec-btn.quiet { border-color: transparent; background: none; color: var(--soft); }
     .rec-link {
       font: inherit; font-size: 0.88rem; cursor: pointer; border: none; background: none;
