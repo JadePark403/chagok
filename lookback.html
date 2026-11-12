@@ -43,7 +43,7 @@
     .pile {
       display: flex; flex-wrap: wrap-reverse; justify-content: center; align-content: flex-start;
       gap: 0 2px; min-height: 150px; max-width: 330px; margin: 0 auto;
-      padding: 0 0 12px; border-bottom: 2px solid #e6d6c3;
+      padding: 0 0 12px; border-bottom: var(--border-strong) solid #e6d6c3;
     }
     /* 크고 통통한 조약돌: 위는 밝게, 아래는 살짝 그늘지게 */
     .pebble {
@@ -56,7 +56,7 @@
       transition: transform .2s ease;
     }
     .pebble:active { transform: translateY(-3px) rotate(var(--rot)) !important; }
-    .pebble:focus-visible { outline: 2px solid var(--soft); outline-offset: 2px; }
+    .pebble:focus-visible { outline: var(--border-strong) solid var(--soft); outline-offset: 2px; }
     /* 털어놓은 조약돌: 바닷가의 유리 조약돌처럼 뽀얗게 비치는 느낌.
        겹친 뒤쪽 돌이 비쳐 지저분해지지 않게, 바탕은 옅은 색으로 채우고 빛만 비치게 해요 */
     .pebble.vent {
@@ -80,10 +80,10 @@
 
     /* 날마다 해낸 것 */
     h2 { font-size: 1.05rem; margin: 28px 0 8px; }
-    .day { padding: 12px 2px; border-bottom: 1px solid var(--line); }
+    .day { padding: 12px 2px; border-bottom: var(--border) solid var(--line); }
     .day-head { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; }
     .day-head strong { font-size: 0.98rem; }
-    .day-head .today { font-size: 0.75rem; color: #b06a3e; background: var(--accent-soft); border-radius: 999px; padding: 1px 8px; }
+    .day-head .today { font-size: 0.75rem; color: var(--accent-deep); background: var(--accent-soft); border-radius: 999px; padding: 1px 8px; }
     /* 그날의 날씨: 일기장 귀퉁이에 적는 것처럼 작게 */
     .weather { display: inline-flex; width: 22px; height: 22px; flex-shrink: 0; }
     .weather svg { width: 100%; height: 100%; }
@@ -95,7 +95,7 @@
       border-radius: 8px; cursor: pointer;
     }
     .day li:active { background: var(--accent-soft); }
-    .day li:focus-visible { outline: 2px solid var(--soft); outline-offset: 1px; }
+    .day li:focus-visible { outline: var(--border-strong) solid var(--soft); outline-offset: 1px; }
     .day li time { color: var(--soft); font-size: 0.85rem; min-width: 4.2em; padding-top: 1px; }
     .day li .memo { display: block; color: var(--soft); font-size: 0.85rem; }
     .day li .memo.hint { color: var(--faint); font-size: 0.8rem; }

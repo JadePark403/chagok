@@ -45,7 +45,7 @@
     .help-emergency a { color: var(--accent-deep); font-size: 1.05rem; text-decoration: none; padding: 4px 2px; }
     .help-note {
       color: var(--soft); font-size: 0.82rem; margin: 14px 2px 0;
-      border-top: 1px solid var(--line); padding-top: 12px;
+      border-top: var(--border) solid var(--line); padding-top: 12px;
     }
     .help-close {
       display: block; width: 100%; margin-top: 16px; font: inherit; cursor: pointer;

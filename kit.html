@@ -63,7 +63,7 @@
       transition: transform .15s ease, background .2s ease;
     }
     .card:active { transform: scale(0.98); background: var(--card-press); }
-    .card:focus-visible { outline: 2px solid var(--soft); outline-offset: 2px; }
+    .card:focus-visible { outline: var(--border-strong) solid var(--soft); outline-offset: 2px; }
     .card .text { display: block; font-size: 1.05rem; }
     .card .from { display: block; color: var(--soft); font-size: 0.8rem; margin-top: 2px; }
     .card.flash { animation: flash .9s ease; }
@@ -78,7 +78,7 @@
 
     .field {
       display: block; width: 100%; min-width: 0; font: inherit; color: inherit;
-      padding: 12px 14px; border: 1.5px solid transparent; border-radius: 12px;
+      padding: 12px 14px; border: var(--border-field) solid transparent; border-radius: 12px;
       background: var(--bg); outline: none;
     }
     .field::placeholder { color: var(--faint); }

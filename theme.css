@@ -22,12 +22,12 @@
 
   /* 글자 */
   --text: #4a4038;
-  --soft: #75685d;        /* 보조 글자: 크림 위에서도 잘 읽히는 진하기 */
-  --faint: #b2a497;       /* 아주 조용한 힌트 */
+  --soft: #685b50;        /* 보조 글자: 어느 바탕 위에서도 대비 4.5:1 이상 (가장 낮은 복숭아 바탕에서 4.85) */
+  --faint: #8f8174;       /* 입력칸 안내 같은 조용한 힌트: 크림·카드 바탕에서 대비 3:1 이상 */
 
   /* 살구·복숭아 (조약돌 색) */
   --accent: #e8a87c;
-  --accent-deep: #b4693e; /* 살구 바탕 위 글자 */
+  --accent-deep: #8f4c26; /* "내가 해냈다" 같은 살구색 글자: 어느 바탕 위에서도 대비 4.5:1 이상 */
   --accent-soft: #fbe8da;
   --peach: #f6d8c2;       /* 해낸 항목 바탕 */
   --pebble-1: #e09a6b;
@@ -36,6 +36,12 @@
   --pebble-4: #f2c4a0;
 
   --radius: 16px;
+
+  /* 테두리 두께: 이 숫자 하나만 바꾸면 모든 화면의 선이 함께 바뀌어요.
+     구분선은 이 두께 그대로, 입력칸은 1.5배, 초점 표시·돌아보기 바닥선은 2배예요. */
+  --border: 1px;
+  --border-field: calc(var(--border) * 1.5);
+  --border-strong: calc(var(--border) * 2);
   --font: "Gowun Dodum", -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Noto Sans KR", sans-serif;
 }
 
@@ -65,12 +71,15 @@ body {
   line-height: 1.6;
   -webkit-tap-highlight-color: transparent;
   -webkit-font-smoothing: antialiased;
+  /* 획을 아주 살짝 두껍게: 기운 없는 날에도 글씨가 흐리게 보이지 않도록 */
+  -webkit-text-stroke: 0.35px;
   /* 한국어가 낱말 중간에서 끊기지 않게 (아주 긴 낱말만 필요할 때 끊어요) */
   word-break: keep-all;
   overflow-wrap: break-word;
 }
 button, input, textarea, select { font-family: inherit; }
 
-/* 고운돋움은 굵은 글꼴이 따로 없어요. 억지로 굵게 만들지 않고, 크기로 제목을 구분해요. */
-h1, h2, h3, strong, b { font-weight: 400; }
+/* 중요한 글씨는 굵게: 제목, 해낸 항목 이름
+   (고운돋움은 굵은 글꼴 파일이 따로 없어서, 브라우저가 획을 두껍게 그려 줘요) */
+h1, h2, h3, strong, b { font-weight: 700; }
 h1 { letter-spacing: -0.01em; }

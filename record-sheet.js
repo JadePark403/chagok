@@ -16,11 +16,11 @@
     @media (prefers-reduced-motion: reduce) { .rec-sheet[open] { animation: none; } }
     .rec-inner { padding: 20px 18px calc(20px + env(safe-area-inset-bottom)); }
     .rec-when { color: var(--soft); font-size: 0.85rem; margin: 0; }
-    .rec-name { font-size: 1.2rem; margin: 2px 0 14px; }
+    .rec-name { font-size: 1.2rem; margin: 2px 0 14px; font-weight: 700; }
     .rec-name small { font-weight: 400; color: var(--accent-deep); font-size: 0.85rem; margin-left: 6px; }
     .rec-memo {
       display: block; width: 100%; font: inherit; color: inherit;
-      padding: 12px 14px; border: 1.5px solid transparent; border-radius: 12px;
+      padding: 12px 14px; border: var(--border-field) solid transparent; border-radius: 12px;
       background: var(--card); outline: none;
     }
     .rec-memo::placeholder { color: var(--faint); }

@@ -78,7 +78,7 @@
     .mood-btn svg { width: 48px; height: 48px; }
     .mood-btn:active { transform: scale(0.95); }
     .mood-btn[aria-pressed="true"] { background: var(--bg); color: var(--text); }
-    .mood-btn:focus-visible { outline: 2px solid var(--soft); outline-offset: 1px; }
+    .mood-btn:focus-visible { outline: var(--border-strong) solid var(--soft); outline-offset: 1px; }
     .mood-note { color: var(--accent-deep); font-size: 0.85rem; min-height: 1.4em; margin: 6px 6px 0; }
 
     /* 낮은 날: 부드럽게 펼쳐지는 작은 자리 */
@@ -111,7 +111,7 @@
     .low-more { display: block; margin: 8px 2px 0; }
     .low-next {
       display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap;
-      margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--line); font-size: 0.88rem; color: var(--soft);
+      margin-top: 14px; padding-top: 12px; border-top: var(--border) solid var(--line); font-size: 0.88rem; color: var(--soft);
     }
     .low-next a { color: var(--text); text-decoration: none; background: var(--accent-soft); border-radius: 999px; padding: 7px 14px; white-space: nowrap; }
     .low-next .end { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
@@ -155,7 +155,7 @@
       transition: transform .15s ease, background .3s ease;
     }
     .item:active { transform: scale(0.98); background: var(--card-press); }
-    .item .name { flex: 1; font-size: 1.08rem; }
+    .item .name { flex: 1; font-size: 1.08rem; font-weight: 700; }
     .item .count { color: var(--soft); font-size: 0.88rem; white-space: nowrap; }
     /* 해낸 항목: 조약돌 같은 복숭아·살구 톤 */
     .item.did { background: var(--peach); }
@@ -189,7 +189,7 @@
     .add input {
       flex: 1; min-width: 0; font: inherit; color: inherit;
       padding: 14px 16px;
-      border: 1.5px solid transparent; border-radius: 14px;
+      border: var(--border-field) solid transparent; border-radius: 14px;
       background: var(--card); outline: none;
     }
     .add input::placeholder { color: var(--faint); }
@@ -212,7 +212,7 @@
     .log { list-style: none; padding: 0; margin: 0; }
     .log li {
       display: flex; gap: 10px; padding: 10px 2px;
-      border-bottom: 1px solid var(--line); font-size: 0.95rem;
+      border-bottom: var(--border) solid var(--line); font-size: 0.95rem;
     }
     .log time { color: var(--soft); min-width: 3.5em; }
 
@@ -249,7 +249,7 @@
     .log .entry { flex: 1; min-width: 0; }
     .log li.tappable { cursor: pointer; border-radius: 8px; }
     .log li.tappable:active { background: var(--accent-soft); }
-    .log li.tappable:focus-visible { outline: 2px solid var(--soft); outline-offset: 2px; }
+    .log li.tappable:focus-visible { outline: var(--border-strong) solid var(--soft); outline-offset: 2px; }
 
     /* 인트로 */
     .splash { display: none; }
